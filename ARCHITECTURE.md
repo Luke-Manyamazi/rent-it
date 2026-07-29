@@ -86,6 +86,28 @@ pushes tenant-landlord contact through in-app messaging instead of raw phone
 numbers, which is also a product goal (keeps the relationship, and the trust
 mechanisms around it, on-platform instead of moving to WhatsApp).
 
+## Authentication
+
+- **Email/Password and Google** are the two primary sign-in methods, both of
+  which create a `users/{uid}` + `users/{uid}/private/contact` doc pair
+  client-side (`src/features/auth/api/auth.ts`) — see the RBAC note above for
+  why this isn't done via a Cloud Function yet.
+- **Google sign-in doesn't collect a role.** A brand-new Google sign-in is
+  routed to `/choose-role` to finish profile creation before it can reach any
+  dashboard; `RequireProfile` (`src/app/route-guards.tsx`) enforces this for
+  every `/dashboard/*` route.
+- **Phone OTP is a verification step, not a third primary login method.**
+  Treating it as its own sign-in path would let one person hold two unlinked
+  RentIT accounts (email+password and phone). Instead, `/verify-phone` links
+  a phone credential to the already-authenticated account
+  (`linkWithCredential`), and sets `phoneVerified: true` on
+  `private/contact`. It's skippable post-signup and re-visitable later, since
+  a verified phone feeds trust score / the "Verified Before You Travel" flow
+  but isn't required to use the platform.
+- **Admin accounts have no self-service path.** `firestore.rules` blocks
+  creating or updating a user doc with `role == 'admin'` from the client
+  entirely — the first admin is set by hand in the Firestore console.
+
 ## Verified Before You Travel
 
 `Booking.status` state machine (`src/types/booking.ts`):

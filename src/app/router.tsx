@@ -3,7 +3,17 @@ import { PublicLayout } from '@/components/layout/PublicLayout'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { LandingPage } from '@/pages/LandingPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
+import { LoginPage } from '@/pages/LoginPage'
+import { SignupPage } from '@/pages/SignupPage'
+import { ChooseRolePage } from '@/pages/ChooseRolePage'
+import { VerifyPhonePage } from '@/pages/VerifyPhonePage'
 import { PlaceholderPage } from '@/components/common/PlaceholderPage'
+import {
+  RequireAuth,
+  RequireProfile,
+  RequireRole,
+  DashboardIndexRedirect,
+} from '@/app/route-guards'
 
 export const router = createBrowserRouter([
   {
@@ -37,18 +47,67 @@ export const router = createBrowserRouter([
         path: '/verified-before-you-travel',
         element: <PlaceholderPage title="Verified Before You Travel" />,
       },
-      { path: '/login', element: <PlaceholderPage title="Log in" /> },
-      { path: '/signup', element: <PlaceholderPage title="Create your account" /> },
+      { path: '/login', element: <LoginPage /> },
+      { path: '/signup', element: <SignupPage /> },
+      {
+        path: '/choose-role',
+        element: (
+          <RequireAuth>
+            <ChooseRolePage />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: '/verify-phone',
+        element: (
+          <RequireAuth>
+            <VerifyPhonePage />
+          </RequireAuth>
+        ),
+      },
     ],
   },
   {
     path: '/dashboard',
-    element: <DashboardLayout />,
+    element: (
+      <RequireProfile>
+        <DashboardLayout />
+      </RequireProfile>
+    ),
     children: [
-      { path: 'tenant', element: <PlaceholderPage title="Tenant Dashboard" /> },
-      { path: 'landlord', element: <PlaceholderPage title="Landlord Dashboard" /> },
-      { path: 'agency', element: <PlaceholderPage title="Agency Dashboard" /> },
-      { path: 'admin', element: <PlaceholderPage title="Admin Dashboard" /> },
+      { index: true, element: <DashboardIndexRedirect /> },
+      {
+        path: 'tenant',
+        element: (
+          <RequireRole roles={['tenant']}>
+            <PlaceholderPage title="Tenant Dashboard" />
+          </RequireRole>
+        ),
+      },
+      {
+        path: 'landlord',
+        element: (
+          <RequireRole roles={['landlord']}>
+            <PlaceholderPage title="Landlord Dashboard" />
+          </RequireRole>
+        ),
+      },
+      {
+        path: 'agency',
+        element: (
+          <RequireRole roles={['agency']}>
+            <PlaceholderPage title="Agency Dashboard" />
+          </RequireRole>
+        ),
+      },
+      {
+        path: 'admin',
+        element: (
+          <RequireRole roles={['admin']}>
+            <PlaceholderPage title="Admin Dashboard" />
+          </RequireRole>
+        ),
+      },
     ],
   },
   { path: '*', element: <NotFoundPage /> },

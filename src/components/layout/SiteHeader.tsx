@@ -9,8 +9,12 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 import { APP_NAME, NAV_LINKS } from '@/config/constants'
+import { useAuth } from '@/features/auth/hooks/useAuth'
 
 export function SiteHeader() {
+  const { firebaseUser, profile } = useAuth()
+  const dashboardHref = profile ? `/dashboard/${profile.role}` : '/dashboard'
+
   return (
     <header className="bg-background/80 sticky top-0 z-50 border-b backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -34,12 +38,20 @@ export function SiteHeader() {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
-          <Button variant="ghost" asChild>
-            <Link to="/login">Log in</Link>
-          </Button>
-          <Button asChild>
-            <Link to="/signup">Get Started</Link>
-          </Button>
+          {firebaseUser ? (
+            <Button asChild>
+              <Link to={dashboardHref}>Dashboard</Link>
+            </Button>
+          ) : (
+            <>
+              <Button variant="ghost" asChild>
+                <Link to="/login">Log in</Link>
+              </Button>
+              <Button asChild>
+                <Link to="/signup">Get Started</Link>
+              </Button>
+            </>
+          )}
         </div>
 
         <Sheet>
@@ -64,12 +76,20 @@ export function SiteHeader() {
                 </Link>
               ))}
               <div className="mt-4 flex flex-col gap-2">
-                <Button variant="outline" asChild>
-                  <Link to="/login">Log in</Link>
-                </Button>
-                <Button asChild>
-                  <Link to="/signup">Get Started</Link>
-                </Button>
+                {firebaseUser ? (
+                  <Button asChild>
+                    <Link to={dashboardHref}>Dashboard</Link>
+                  </Button>
+                ) : (
+                  <>
+                    <Button variant="outline" asChild>
+                      <Link to="/login">Log in</Link>
+                    </Button>
+                    <Button asChild>
+                      <Link to="/signup">Get Started</Link>
+                    </Button>
+                  </>
+                )}
               </div>
             </nav>
           </SheetContent>
