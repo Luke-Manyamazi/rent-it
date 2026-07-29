@@ -50,6 +50,7 @@ const ADMIN_NAV: DashboardNavItem[] = [
   { label: 'Overview', href: '/dashboard/admin', icon: LayoutDashboard, end: true },
   { label: 'Users', href: '/dashboard/admin/users', icon: Users },
   { label: 'Agencies', href: '/dashboard/admin/agencies', icon: Building2 },
+  { label: 'Listings', href: '/dashboard/admin/listings', icon: Home },
   { label: 'Fraud reports', href: '/dashboard/admin/fraud-flags', icon: FlagTriangleRight },
 ]
 

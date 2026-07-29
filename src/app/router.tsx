@@ -17,8 +17,14 @@ import { AdminOverviewPage } from '@/pages/AdminOverviewPage'
 import { AdminUsersPage } from '@/pages/AdminUsersPage'
 import { AdminAgenciesPage } from '@/pages/AdminAgenciesPage'
 import { AdminFraudFlagsPage } from '@/pages/AdminFraudFlagsPage'
+import { AdminListingsPage } from '@/pages/AdminListingsPage'
 import { TrustScorePage } from '@/pages/TrustScorePage'
 import { AccountProfilePage } from '@/pages/AccountProfilePage'
+import { ListingsPage } from '@/pages/ListingsPage'
+import { PropertyDetailPage } from '@/pages/PropertyDetailPage'
+import { PropertyListPage } from '@/pages/PropertyListPage'
+import { PropertyCreatePage } from '@/pages/PropertyCreatePage'
+import { PropertyEditPage } from '@/pages/PropertyEditPage'
 import { PlaceholderPage } from '@/components/common/PlaceholderPage'
 import {
   RequireAuth,
@@ -32,19 +38,8 @@ export const router = createBrowserRouter([
     element: <PublicLayout />,
     children: [
       { path: '/', element: <LandingPage /> },
-      {
-        path: '/listings',
-        element: (
-          <PlaceholderPage
-            title="Browse Rentals"
-            description="Search and filtering lands in a later phase."
-          />
-        ),
-      },
-      {
-        path: '/listings/:id',
-        element: <PlaceholderPage title="Property Details" />,
-      },
+      { path: '/listings', element: <ListingsPage /> },
+      { path: '/listings/:id', element: <PropertyDetailPage /> },
       {
         path: '/list-property',
         element: (
@@ -128,15 +123,9 @@ export const router = createBrowserRouter([
         ),
         children: [
           { index: true, element: <LandlordOverviewPage /> },
-          {
-            path: 'properties',
-            element: (
-              <PlaceholderPage
-                title="My properties"
-                description="Listing management (create, edit, photos) lands in a later phase."
-              />
-            ),
-          },
+          { path: 'properties', element: <PropertyListPage /> },
+          { path: 'properties/new', element: <PropertyCreatePage /> },
+          { path: 'properties/:id/edit', element: <PropertyEditPage /> },
           {
             path: 'bookings',
             element: (
@@ -159,15 +148,9 @@ export const router = createBrowserRouter([
         ),
         children: [
           { index: true, element: <AgencyOverviewPage /> },
-          {
-            path: 'properties',
-            element: (
-              <PlaceholderPage
-                title="Properties"
-                description="Listing management (create, edit, photos) lands in a later phase."
-              />
-            ),
-          },
+          { path: 'properties', element: <PropertyListPage /> },
+          { path: 'properties/new', element: <PropertyCreatePage /> },
+          { path: 'properties/:id/edit', element: <PropertyEditPage /> },
           {
             path: 'bookings',
             element: (
@@ -194,6 +177,7 @@ export const router = createBrowserRouter([
           { index: true, element: <AdminOverviewPage /> },
           { path: 'users', element: <AdminUsersPage /> },
           { path: 'agencies', element: <AdminAgenciesPage /> },
+          { path: 'listings', element: <AdminListingsPage /> },
           { path: 'fraud-flags', element: <AdminFraudFlagsPage /> },
         ],
       },
