@@ -9,6 +9,8 @@ import { ChooseRolePage } from '@/pages/ChooseRolePage'
 import { VerifyPhonePage } from '@/pages/VerifyPhonePage'
 import { TenantOverviewPage } from '@/pages/TenantOverviewPage'
 import { TenantSavedListingsPage } from '@/pages/TenantSavedListingsPage'
+import { LandlordOverviewPage } from '@/pages/LandlordOverviewPage'
+import { TrustScorePage } from '@/pages/TrustScorePage'
 import { AccountProfilePage } from '@/pages/AccountProfilePage'
 import { PlaceholderPage } from '@/components/common/PlaceholderPage'
 import {
@@ -114,9 +116,32 @@ export const router = createBrowserRouter([
         path: 'landlord',
         element: (
           <RequireRole roles={['landlord']}>
-            <PlaceholderPage title="Landlord Dashboard" />
+            <Outlet />
           </RequireRole>
         ),
+        children: [
+          { index: true, element: <LandlordOverviewPage /> },
+          {
+            path: 'properties',
+            element: (
+              <PlaceholderPage
+                title="My properties"
+                description="Listing management (create, edit, photos) lands in a later phase."
+              />
+            ),
+          },
+          {
+            path: 'bookings',
+            element: (
+              <PlaceholderPage
+                title="Bookings"
+                description="Viewing requests and Verified Before You Travel confirmations will appear here once the booking system lands."
+              />
+            ),
+          },
+          { path: 'trust-score', element: <TrustScorePage /> },
+          { path: 'profile', element: <AccountProfilePage /> },
+        ],
       },
       {
         path: 'agency',
