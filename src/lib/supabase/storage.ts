@@ -7,7 +7,8 @@ export const STORAGE_BUCKETS = {
 } as const
 
 /**
- * Path conventions mirror the RLS policies in supabase/storage-policies.sql —
+ * Path conventions mirror the RLS policies in
+ * supabase/migrations/20260729000000_storage_setup.sql —
  * changing these requires updating that file too. Folder segments that embed
  * a Firebase UID (avatarPath, verificationDocumentPath, landlord branch of
  * propertyPhotoPath) are what the RLS policies match against

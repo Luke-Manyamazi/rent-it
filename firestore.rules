@@ -6,10 +6,9 @@ rules_version = '2';
  * setting custom claims requires the Admin SDK (a Cloud Function), and
  * Cloud Functions are deliberately deferred to Phase 11 (see ARCHITECTURE.md).
  * Each `get()` below costs one document read against the security-rules
- * quota. When Cloud Functions are introduced, migrate `userRole()` /
- * `userAgencyId()` to `request.auth.token.role` / `request.auth.token.agencyId`
- * custom claims for lower latency and cost — the rule *shapes* below stay
- * the same either way.
+ * quota. When Cloud Functions are introduced, migrate `userRole()` to
+ * `request.auth.token.role` custom claims for lower latency and cost — the
+ * rule *shapes* below stay the same either way.
  */
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -24,10 +23,6 @@ service cloud.firestore {
 
     function userRole() {
       return currentUser().data.role;
-    }
-
-    function userAgencyId() {
-      return currentUser().data.agencyId;
     }
 
     function isAdmin() {

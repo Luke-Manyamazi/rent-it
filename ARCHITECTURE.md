@@ -29,7 +29,9 @@ chat attachments need "is this UID a member of agency X / participant in
 conversation Y" — a relational check RLS can't do against Firestore, and
 there's no Postgres mirror of that membership data yet. Until Phase 11 adds
 a backend (Cloud Functions), those two cases use permissive
-any-authenticated-user policies (see `supabase/storage-policies.sql`).
+any-authenticated-user policies (see
+`supabase/migrations/20260729000000_storage_setup.sql`, applied to the
+`rentit-masvingo-dev` project).
 Closing this gap means either:
 1. A Cloud Function trigger that mirrors Firestore agency membership /
    conversation participants into a small Postgres table Supabase RLS can
