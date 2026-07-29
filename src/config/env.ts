@@ -9,6 +9,8 @@ const envSchema = z.object({
   VITE_FIREBASE_APP_ID: z.string().min(1),
   VITE_FIREBASE_MEASUREMENT_ID: z.string().optional(),
   VITE_FIREBASE_VAPID_KEY: z.string().optional(),
+  VITE_SUPABASE_URL: z.url('Supabase project URL is required'),
+  VITE_SUPABASE_ANON_KEY: z.string().min(1, 'Supabase anon key is required'),
   VITE_APP_URL: z.url().default('http://localhost:5173'),
 })
 

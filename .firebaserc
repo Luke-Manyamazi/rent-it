@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "default": "rentit-masvingo-dev",
+    "dev": "rentit-masvingo-dev",
+    "prod": "rentit-masvingo-prod"
+  }
+}

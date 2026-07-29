@@ -1,0 +1,234 @@
+rules_version = '2';
+
+/**
+ * RBAC note: roles are looked up from the user's own Firestore document
+ * (`users/{uid}.role`) rather than Firebase Auth custom claims, because
+ * setting custom claims requires the Admin SDK (a Cloud Function), and
+ * Cloud Functions are deliberately deferred to Phase 11 (see ARCHITECTURE.md).
+ * Each `get()` below costs one document read against the security-rules
+ * quota. When Cloud Functions are introduced, migrate `userRole()` /
+ * `userAgencyId()` to `request.auth.token.role` / `request.auth.token.agencyId`
+ * custom claims for lower latency and cost — the rule *shapes* below stay
+ * the same either way.
+ */
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function currentUser() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function userRole() {
+      return currentUser().data.role;
+    }
+
+    function userAgencyId() {
+      return currentUser().data.agencyId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && userRole() == 'admin';
+    }
+
+    function isAgencyMember(agencyId) {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/agencies/$(agencyId)/members/$(request.auth.uid));
+    }
+
+    /** True if the caller owns this landlord/agency-owned resource. */
+    function ownsResource(ownerId, ownerType) {
+      return isSignedIn() && (
+        (ownerType == 'landlord' && request.auth.uid == ownerId) ||
+        (ownerType == 'agency' && isAgencyMember(ownerId))
+      );
+    }
+
+    // ---------------------------------------------------------------------
+    // users
+    // ---------------------------------------------------------------------
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      // role can only be set to a self-serve role on creation; only an
+      // admin can promote/demote a user afterwards (including to 'admin').
+      allow create: if isSignedIn() && request.auth.uid == userId &&
+        request.resource.data.role in ['tenant', 'landlord', 'agency'] &&
+        request.resource.data.isSuspended == false;
+      allow update: if isSignedIn() && (
+        (request.auth.uid == userId &&
+          request.resource.data.role == resource.data.role &&
+          request.resource.data.isSuspended == resource.data.isSuspended) ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+
+      match /private/contact {
+        allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+        allow write: if isSignedIn() && request.auth.uid == userId;
+      }
+
+      match /savedProperties/{propertyId} {
+        allow read, write: if isSignedIn() && request.auth.uid == userId;
+      }
+
+      match /trustScoreEvents/{eventId} {
+        allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+        // Only written by the Admin SDK (Cloud Functions bypass rules).
+        allow write: if false;
+      }
+    }
+
+    // ---------------------------------------------------------------------
+    // agencies
+    // ---------------------------------------------------------------------
+    match /agencies/{agencyId} {
+      allow read: if true;
+      allow create: if isSignedIn() && userRole() == 'agency' &&
+        request.resource.data.ownerId == request.auth.uid;
+      allow update: if isSignedIn() && (resource.data.ownerId == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
+
+      match /members/{memberId} {
+        allow read: if isSignedIn() && (isAgencyMember(agencyId) || isAdmin());
+        allow write: if isSignedIn() &&
+          (get(/databases/$(database)/documents/agencies/$(agencyId)).data.ownerId == request.auth.uid ||
+           isAdmin());
+      }
+
+      match /trustScoreEvents/{eventId} {
+        allow read: if isSignedIn() && (isAgencyMember(agencyId) || isAdmin());
+        allow write: if false;
+      }
+    }
+
+    // ---------------------------------------------------------------------
+    // properties — public marketplace, but only 'active'/'rented' listings
+    // are visible to everyone; draft/pending/suspended are owner+admin only.
+    // ---------------------------------------------------------------------
+    match /properties/{propertyId} {
+      allow read: if resource.data.status in ['active', 'rented'] ||
+        ownsResource(resource.data.ownerId, resource.data.ownerType) ||
+        isAdmin();
+      allow create: if isSignedIn() &&
+        userRole() in ['landlord', 'agency'] &&
+        ownsResource(request.resource.data.ownerId, request.resource.data.ownerType) &&
+        request.resource.data.isVerified == false &&
+        request.resource.data.isFlagged == false;
+      allow update: if isSignedIn() && (
+        (ownsResource(resource.data.ownerId, resource.data.ownerType) &&
+          request.resource.data.isVerified == resource.data.isVerified &&
+          request.resource.data.ownerId == resource.data.ownerId &&
+          request.resource.data.ownerType == resource.data.ownerType) ||
+        isAdmin()
+      );
+      allow delete: if isSignedIn() && (ownsResource(resource.data.ownerId, resource.data.ownerType) || isAdmin());
+    }
+
+    // ---------------------------------------------------------------------
+    // bookings — the Verified Before You Travel state machine.
+    // Auto-cancellation (status -> auto_cancelled_no_confirmation) is only
+    // ever written by the scheduled Cloud Function via the Admin SDK, so no
+    // client rule allows that transition.
+    // ---------------------------------------------------------------------
+    match /bookings/{bookingId} {
+      allow read: if isSignedIn() && (
+        resource.data.tenantId == request.auth.uid ||
+        ownsResource(resource.data.ownerId, resource.data.ownerType) ||
+        isAdmin()
+      );
+      allow create: if isSignedIn() && userRole() == 'tenant' &&
+        request.resource.data.tenantId == request.auth.uid &&
+        request.resource.data.status == 'pending';
+      allow update: if isSignedIn() && (
+        (resource.data.tenantId == request.auth.uid &&
+          request.resource.data.status in ['cancelled_by_tenant']) ||
+        (ownsResource(resource.data.ownerId, resource.data.ownerType) &&
+          request.resource.data.status in ['confirmed', 'availability_confirmed', 'cancelled_by_owner', 'completed']) ||
+        isAdmin()
+      );
+      allow delete: if false;
+    }
+
+    // ---------------------------------------------------------------------
+    // conversations & messages
+    // ---------------------------------------------------------------------
+    match /conversations/{conversationId} {
+      allow read, update: if isSignedIn() && request.auth.uid in resource.data.participantIds;
+      allow create: if isSignedIn() &&
+        request.auth.uid in request.resource.data.participantIds &&
+        request.resource.data.participantIds.size() == 2;
+      allow delete: if isAdmin();
+
+      match /messages/{messageId} {
+        allow read: if isSignedIn() &&
+          request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds;
+        allow create: if isSignedIn() &&
+          request.resource.data.senderId == request.auth.uid &&
+          request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds;
+        // Only the readBy array may change after creation.
+        allow update: if isSignedIn() &&
+          request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy']);
+        allow delete: if isAdmin();
+      }
+    }
+
+    // ---------------------------------------------------------------------
+    // notifications
+    // Known MVP simplification: without Cloud Functions yet, notifications
+    // are authored client-side by the acting user (e.g. a tenant creates the
+    // "booking_request" notification for the landlord). Phase 13 should move
+    // creation into a Firestore-trigger Cloud Function so notification
+    // content can't be spoofed by a malicious client.
+    // ---------------------------------------------------------------------
+    match /notifications/{notificationId} {
+      allow read: if isSignedIn() && resource.data.recipientId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.recipientId != request.auth.uid;
+      allow update: if isSignedIn() && resource.data.recipientId == request.auth.uid &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
+      allow delete: if isSignedIn() && resource.data.recipientId == request.auth.uid;
+    }
+
+    // ---------------------------------------------------------------------
+    // reviews
+    // ---------------------------------------------------------------------
+    match /reviews/{reviewId} {
+      allow read: if resource.data.moderationStatus == 'visible' ||
+        (isSignedIn() && (resource.data.authorId == request.auth.uid || isAdmin()));
+      allow create: if isSignedIn() && userRole() == 'tenant' &&
+        request.resource.data.authorId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------------
+    // subscriptions — billing state is server/admin controlled even before
+    // real payment integration exists (Phase 14).
+    // ---------------------------------------------------------------------
+    match /subscriptions/{agencyId} {
+      allow read: if isSignedIn() && (isAgencyMember(agencyId) || isAdmin());
+      allow write: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------------
+    // fraudFlags
+    // ---------------------------------------------------------------------
+    match /fraudFlags/{flagId} {
+      allow read: if isSignedIn() && (isAdmin() || resource.data.reportedBy == request.auth.uid);
+      allow create: if isSignedIn() && request.resource.data.reportedBy == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------------
+    // verificationRequests — documents live in Storage, only paths here.
+    // ---------------------------------------------------------------------
+    match /verificationRequests/{requestId} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+  }
+}
