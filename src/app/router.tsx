@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom'
+import { Outlet, createBrowserRouter } from 'react-router-dom'
 import { PublicLayout } from '@/components/layout/PublicLayout'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { LandingPage } from '@/pages/LandingPage'
@@ -7,6 +7,9 @@ import { LoginPage } from '@/pages/LoginPage'
 import { SignupPage } from '@/pages/SignupPage'
 import { ChooseRolePage } from '@/pages/ChooseRolePage'
 import { VerifyPhonePage } from '@/pages/VerifyPhonePage'
+import { TenantOverviewPage } from '@/pages/TenantOverviewPage'
+import { TenantSavedListingsPage } from '@/pages/TenantSavedListingsPage'
+import { AccountProfilePage } from '@/pages/AccountProfilePage'
 import { PlaceholderPage } from '@/components/common/PlaceholderPage'
 import {
   RequireAuth,
@@ -80,9 +83,32 @@ export const router = createBrowserRouter([
         path: 'tenant',
         element: (
           <RequireRole roles={['tenant']}>
-            <PlaceholderPage title="Tenant Dashboard" />
+            <Outlet />
           </RequireRole>
         ),
+        children: [
+          { index: true, element: <TenantOverviewPage /> },
+          { path: 'saved', element: <TenantSavedListingsPage /> },
+          {
+            path: 'bookings',
+            element: (
+              <PlaceholderPage
+                title="Your bookings"
+                description="Viewing requests will appear here once you book your first one."
+              />
+            ),
+          },
+          {
+            path: 'messages',
+            element: (
+              <PlaceholderPage
+                title="Messages"
+                description="In-app messaging with landlords and agencies is coming soon."
+              />
+            ),
+          },
+          { path: 'profile', element: <AccountProfilePage /> },
+        ],
       },
       {
         path: 'landlord',

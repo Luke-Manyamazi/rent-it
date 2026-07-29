@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { onAuthStateChanged, type User } from 'firebase/auth'
 import { doc, onSnapshot } from 'firebase/firestore'
 import { auth, db } from '@/lib/firebase/config'
@@ -14,6 +14,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null)
   const [authResolved, setAuthResolved] = useState(false)
   const [profileSnapshot, setProfileSnapshot] = useState<ProfileSnapshot | null>(null)
+  // Bumped by refreshFirebaseUser() so the memoized context value below is
+  // recomputed — auth.currentUser.reload() mutates the same User instance
+  // in place, so consumers wouldn't otherwise see fields like emailVerified
+  // change (no new object reference to trigger a re-render).
+  const [refreshTick, setRefreshTick] = useState(0)
+
+  const refreshFirebaseUser = useCallback(async () => {
+    await auth.currentUser?.reload()
+    setFirebaseUser(auth.currentUser)
+    setRefreshTick((tick) => tick + 1)
+  }, [])
 
   useEffect(() => {
     return onAuthStateChanged(auth, (user) => {
@@ -41,8 +52,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       firebaseUser,
       profile,
       loading: !authResolved || !profileResolved,
+      refreshFirebaseUser,
     }),
-    [firebaseUser, profile, authResolved, profileResolved]
+    // refreshTick isn't read in the body above, but it must stay a dependency:
+    // refreshFirebaseUser() re-sets firebaseUser to the *same* object reference
+    // (reload() mutates in place), so without refreshTick this memo would never
+    // recompute and consumers would never see the refreshed emailVerified, etc.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [firebaseUser, profile, authResolved, profileResolved, refreshFirebaseUser, refreshTick]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

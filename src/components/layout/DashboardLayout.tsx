@@ -7,11 +7,9 @@ import { APP_NAME } from '@/config/constants'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { signOutUser } from '@/features/auth/api/auth'
 import { getAuthErrorMessage } from '@/features/auth/api/error-messages'
+import { getDashboardNavItems } from '@/config/dashboard-nav'
+import { DashboardSidebar, DashboardMobileTabs } from '@/components/layout/DashboardSidebar'
 
-/**
- * Minimal shell for authenticated dashboards. Sidebar navigation and
- * trust-score widgets are filled in per-role in later phases.
- */
 export function DashboardLayout() {
   const navigate = useNavigate()
   const { profile } = useAuth()
@@ -30,6 +28,8 @@ export function DashboardLayout() {
     .map((part) => part[0])
     .slice(0, 2)
     .join('')
+
+  const navItems = profile ? getDashboardNavItems(profile.role) : []
 
   return (
     <div className="bg-secondary/20 flex min-h-screen flex-col">
@@ -60,8 +60,12 @@ export function DashboardLayout() {
           </div>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
-        <Outlet />
+      <main className="mx-auto flex w-full max-w-7xl flex-1 gap-8 px-4 py-8 sm:px-6 lg:px-8">
+        <DashboardSidebar items={navItems} />
+        <div className="min-w-0 flex-1">
+          <DashboardMobileTabs items={navItems} />
+          <Outlet />
+        </div>
       </main>
     </div>
   )
