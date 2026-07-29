@@ -6,6 +6,8 @@ import {
   UserCircle,
   Home,
   ShieldCheck,
+  Users,
+  Building2,
   type LucideIcon,
 } from 'lucide-react'
 import type { UserRole } from '@/types/user'
@@ -33,15 +35,25 @@ const LANDLORD_NAV: DashboardNavItem[] = [
   { label: 'Profile', href: '/dashboard/landlord/profile', icon: UserCircle },
 ]
 
-// Agency/admin dashboards are built in later phases — a single link keeps
-// the shared DashboardLayout sidebar meaningful until then.
-const SINGLE_PAGE_NAV: Record<'agency' | 'admin', DashboardNavItem[]> = {
-  agency: [{ label: 'Overview', href: '/dashboard/agency', icon: LayoutDashboard, end: true }],
-  admin: [{ label: 'Overview', href: '/dashboard/admin', icon: LayoutDashboard, end: true }],
-}
+const AGENCY_NAV: DashboardNavItem[] = [
+  { label: 'Overview', href: '/dashboard/agency', icon: LayoutDashboard, end: true },
+  { label: 'Properties', href: '/dashboard/agency/properties', icon: Home },
+  { label: 'Bookings', href: '/dashboard/agency/bookings', icon: CalendarClock },
+  { label: 'Team', href: '/dashboard/agency/team', icon: Users },
+  { label: 'Trust score', href: '/dashboard/agency/trust-score', icon: ShieldCheck },
+  { label: 'Agency profile', href: '/dashboard/agency/agency-profile', icon: Building2 },
+  { label: 'My account', href: '/dashboard/agency/account', icon: UserCircle },
+]
+
+// Admin dashboard is built in a later phase — a single link keeps the
+// shared DashboardLayout sidebar meaningful until then.
+const ADMIN_NAV: DashboardNavItem[] = [
+  { label: 'Overview', href: '/dashboard/admin', icon: LayoutDashboard, end: true },
+]
 
 export function getDashboardNavItems(role: UserRole): DashboardNavItem[] {
   if (role === 'tenant') return TENANT_NAV
   if (role === 'landlord') return LANDLORD_NAV
-  return SINGLE_PAGE_NAV[role]
+  if (role === 'agency') return AGENCY_NAV
+  return ADMIN_NAV
 }

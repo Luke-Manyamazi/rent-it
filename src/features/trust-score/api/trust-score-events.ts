@@ -4,34 +4,38 @@ import { db } from '@/lib/firebase/config'
 import type { TrustScoreEvent } from '@/types/trust-score'
 
 interface EventsSnapshot {
-  ownerId: string
+  key: string
   events: TrustScoreEvent[]
 }
 
-/** Reads `users/{ownerId}/trustScoreEvents` — the agency variant
- *  (`agencies/{agencyId}/trustScoreEvents`) is added in Phase 7 once the
- *  agency dashboard needs it. Events are only ever written by the Admin SDK
- *  (see firestore.rules), so this list stays empty until Phase 11's booking
- *  auto-cancel logic starts appending to it. */
-export function useTrustScoreEvents(ownerId: string | undefined) {
+/** Reads `users/{ownerId}/trustScoreEvents` (landlords/tenants) or
+ *  `agencies/{ownerId}/trustScoreEvents` (agencies). Events are only ever
+ *  written by the Admin SDK (see firestore.rules), so this list stays empty
+ *  until Phase 11's booking auto-cancel logic starts appending to it. */
+export function useTrustScoreEvents(
+  ownerType: 'landlord' | 'agency' | undefined,
+  ownerId: string | undefined
+) {
+  const key = ownerType && ownerId ? `${ownerType}:${ownerId}` : undefined
   const [snapshot, setSnapshot] = useState<EventsSnapshot | null>(null)
 
   useEffect(() => {
-    if (!ownerId) return
+    if (!ownerType || !ownerId || !key) return
+    const collectionName = ownerType === 'agency' ? 'agencies' : 'users'
     const q = query(
-      collection(db, 'users', ownerId, 'trustScoreEvents'),
+      collection(db, collectionName, ownerId, 'trustScoreEvents'),
       orderBy('createdAt', 'desc')
     )
     return onSnapshot(q, (snap) => {
       setSnapshot({
-        ownerId,
+        key,
         events: snap.docs.map((d) => ({ id: d.id, ...d.data() }) as TrustScoreEvent),
       })
     })
-  }, [ownerId])
+  }, [ownerType, ownerId, key])
 
-  const events = ownerId && snapshot?.ownerId === ownerId ? snapshot.events : []
-  const loading = !!ownerId && snapshot?.ownerId !== ownerId
+  const events = key && snapshot?.key === key ? snapshot.events : []
+  const loading = !!key && snapshot?.key !== key
 
   return { events, loading }
 }

@@ -17,6 +17,7 @@ import {
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { auth, db } from '@/lib/firebase/config'
 import type { UserRole } from '@/types/user'
+import { setupAgencyForUser } from '@/features/agency/api/agency-setup'
 
 /**
  * Writes both the public profile and the private contact doc for a
@@ -69,6 +70,9 @@ export async function signUpWithEmail(
   const credential = await createUserWithEmailAndPassword(auth, email, password)
   await updateProfile(credential.user, { displayName: fullName })
   await createUserProfileDocs(credential.user, role, fullName)
+  if (role === 'agency') {
+    await setupAgencyForUser(credential.user, fullName)
+  }
   await sendEmailVerification(credential.user).catch(() => undefined)
   return credential.user
 }
@@ -91,7 +95,11 @@ export async function signInWithGoogle() {
 }
 
 export async function completeGoogleProfile(user: User, role: UserRole) {
-  await createUserProfileDocs(user, role, user.displayName ?? 'RentIT User')
+  const fullName = user.displayName ?? 'RentIT User'
+  await createUserProfileDocs(user, role, fullName)
+  if (role === 'agency') {
+    await setupAgencyForUser(user, fullName)
+  }
 }
 
 export async function signOutUser() {

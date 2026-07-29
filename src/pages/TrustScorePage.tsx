@@ -2,26 +2,34 @@ import { History } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { useAgency } from '@/features/agency/hooks/useAgency'
 import { useTrustScoreEvents } from '@/features/trust-score/api/trust-score-events'
 import { TrustScoreCard } from '@/features/trust-score/components/TrustScoreCard'
 import { TrustScoreEventItem } from '@/features/trust-score/components/TrustScoreEventItem'
 
 export function TrustScorePage() {
   const { firebaseUser, profile } = useAuth()
-  const { events, loading } = useTrustScoreEvents(firebaseUser?.uid)
+  const isAgency = profile?.role === 'agency'
+  const { agency } = useAgency(isAgency ? (profile?.agencyId ?? undefined) : undefined)
+
+  const ownerType = isAgency ? 'agency' : 'landlord'
+  const ownerId = isAgency ? (profile?.agencyId ?? undefined) : firebaseUser?.uid
+  const { events, loading } = useTrustScoreEvents(ownerId ? ownerType : undefined, ownerId)
+
+  const score = isAgency ? (agency?.trustScore ?? 0) : (profile?.trustScore ?? 0)
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Trust score</h1>
         <p className="text-muted-foreground mt-1 text-sm">
-          How tenants know they can rely on you.
+          How tenants know they can rely on {isAgency ? 'your agency' : 'you'}.
         </p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-1">
-          <TrustScoreCard score={profile?.trustScore ?? 0} />
+          <TrustScoreCard score={score} />
         </div>
 
         <div className="lg:col-span-2">

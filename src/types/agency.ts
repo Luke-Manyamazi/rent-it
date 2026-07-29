@@ -34,3 +34,19 @@ export interface AgencyMember {
   invitedAt: Timestamp
   joinedAt: Timestamp | null
 }
+
+export type AgencyInviteStatus = 'pending' | 'accepted'
+
+/**
+ * Stored at `agencyInvites/{lowercasedEmail}` — no backend exists yet to
+ * create an account on someone else's behalf (see ARCHITECTURE.md), so
+ * invites work by matching against the email an invitee later signs up
+ * with, rather than provisioning their account directly.
+ */
+export interface AgencyInvite {
+  email: string
+  agencyId: string
+  invitedByUid: string
+  status: AgencyInviteStatus
+  createdAt: Timestamp
+}

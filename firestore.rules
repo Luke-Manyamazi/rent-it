@@ -34,6 +34,19 @@ service cloud.firestore {
         exists(/databases/$(database)/documents/agencies/$(agencyId)/members/$(request.auth.uid));
     }
 
+    function isAgencyOwner(agencyId) {
+      return isSignedIn() &&
+        get(/databases/$(database)/documents/agencies/$(agencyId)).data.ownerId == request.auth.uid;
+    }
+
+    /** The invite (if any) addressed to the caller's own verified email —
+     *  see the agencyInvites section for why invites are keyed by email
+     *  rather than by uid (no backend exists yet to provision an account
+     *  on someone else's behalf). */
+    function myInvite() {
+      return get(/databases/$(database)/documents/agencyInvites/$(request.auth.token.email));
+    }
+
     /** True if the caller owns this landlord/agency-owned resource. */
     function ownsResource(ownerId, ownerType) {
       return isSignedIn() && (
@@ -88,15 +101,53 @@ service cloud.firestore {
 
       match /members/{memberId} {
         allow read: if isSignedIn() && (isAgencyMember(agencyId) || isAdmin());
-        allow write: if isSignedIn() &&
-          (get(/databases/$(database)/documents/agencies/$(agencyId)).data.ownerId == request.auth.uid ||
-           isAdmin());
+        // A prospective member may create their own membership doc only if
+        // a pending invite addressed to their email names this agency —
+        // otherwise only the owner (or admin) may add/remove members.
+        allow create: if isSignedIn() && (
+          isAgencyOwner(agencyId) ||
+          isAdmin() ||
+          (request.auth.uid == memberId &&
+            request.resource.data.role == 'agent' &&
+            myInvite().data.agencyId == agencyId &&
+            myInvite().data.status == 'pending')
+        );
+        allow update, delete: if isSignedIn() && (isAgencyOwner(agencyId) || isAdmin());
       }
 
       match /trustScoreEvents/{eventId} {
         allow read: if isSignedIn() && (isAgencyMember(agencyId) || isAdmin());
         allow write: if false;
       }
+    }
+
+    // ---------------------------------------------------------------------
+    // agencyInvites — keyed by the invited person's email (see myInvite()
+    // above). Lets an agency owner add a team member without any backend:
+    // the invitee's own signup flow checks for a matching pending invite
+    // and joins the existing agency instead of founding a new one.
+    // ---------------------------------------------------------------------
+    match /agencyInvites/{email} {
+      allow read: if isSignedIn() && (
+        request.auth.token.email == email ||
+        isAgencyMember(resource.data.agencyId) ||
+        isAdmin()
+      );
+      allow create: if isSignedIn() &&
+        isAgencyOwner(request.resource.data.agencyId) &&
+        request.resource.data.invitedByUid == request.auth.uid &&
+        request.resource.data.status == 'pending';
+      allow update: if isSignedIn() && (
+        (request.auth.token.email == email &&
+          resource.data.status == 'pending' &&
+          request.resource.data.status == 'accepted' &&
+          request.resource.data.agencyId == resource.data.agencyId &&
+          request.resource.data.invitedByUid == resource.data.invitedByUid &&
+          request.resource.data.email == resource.data.email) ||
+        isAgencyOwner(resource.data.agencyId) ||
+        isAdmin()
+      );
+      allow delete: if isSignedIn() && (isAgencyOwner(resource.data.agencyId) || isAdmin());
     }
 
     // ---------------------------------------------------------------------

@@ -10,6 +10,9 @@ import { VerifyPhonePage } from '@/pages/VerifyPhonePage'
 import { TenantOverviewPage } from '@/pages/TenantOverviewPage'
 import { TenantSavedListingsPage } from '@/pages/TenantSavedListingsPage'
 import { LandlordOverviewPage } from '@/pages/LandlordOverviewPage'
+import { AgencyOverviewPage } from '@/pages/AgencyOverviewPage'
+import { AgencyTeamPage } from '@/pages/AgencyTeamPage'
+import { AgencyProfilePage } from '@/pages/AgencyProfilePage'
 import { TrustScorePage } from '@/pages/TrustScorePage'
 import { AccountProfilePage } from '@/pages/AccountProfilePage'
 import { PlaceholderPage } from '@/components/common/PlaceholderPage'
@@ -147,9 +150,34 @@ export const router = createBrowserRouter([
         path: 'agency',
         element: (
           <RequireRole roles={['agency']}>
-            <PlaceholderPage title="Agency Dashboard" />
+            <Outlet />
           </RequireRole>
         ),
+        children: [
+          { index: true, element: <AgencyOverviewPage /> },
+          {
+            path: 'properties',
+            element: (
+              <PlaceholderPage
+                title="Properties"
+                description="Listing management (create, edit, photos) lands in a later phase."
+              />
+            ),
+          },
+          {
+            path: 'bookings',
+            element: (
+              <PlaceholderPage
+                title="Bookings"
+                description="Viewing requests and Verified Before You Travel confirmations will appear here once the booking system lands."
+              />
+            ),
+          },
+          { path: 'team', element: <AgencyTeamPage /> },
+          { path: 'trust-score', element: <TrustScorePage /> },
+          { path: 'agency-profile', element: <AgencyProfilePage /> },
+          { path: 'account', element: <AccountProfilePage /> },
+        ],
       },
       {
         path: 'admin',
