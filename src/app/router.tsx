@@ -13,6 +13,10 @@ import { LandlordOverviewPage } from '@/pages/LandlordOverviewPage'
 import { AgencyOverviewPage } from '@/pages/AgencyOverviewPage'
 import { AgencyTeamPage } from '@/pages/AgencyTeamPage'
 import { AgencyProfilePage } from '@/pages/AgencyProfilePage'
+import { AdminOverviewPage } from '@/pages/AdminOverviewPage'
+import { AdminUsersPage } from '@/pages/AdminUsersPage'
+import { AdminAgenciesPage } from '@/pages/AdminAgenciesPage'
+import { AdminFraudFlagsPage } from '@/pages/AdminFraudFlagsPage'
 import { TrustScorePage } from '@/pages/TrustScorePage'
 import { AccountProfilePage } from '@/pages/AccountProfilePage'
 import { PlaceholderPage } from '@/components/common/PlaceholderPage'
@@ -183,9 +187,15 @@ export const router = createBrowserRouter([
         path: 'admin',
         element: (
           <RequireRole roles={['admin']}>
-            <PlaceholderPage title="Admin Dashboard" />
+            <Outlet />
           </RequireRole>
         ),
+        children: [
+          { index: true, element: <AdminOverviewPage /> },
+          { path: 'users', element: <AdminUsersPage /> },
+          { path: 'agencies', element: <AdminAgenciesPage /> },
+          { path: 'fraud-flags', element: <AdminFraudFlagsPage /> },
+        ],
       },
     ],
   },

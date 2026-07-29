@@ -84,8 +84,12 @@ service cloud.firestore {
 
       match /trustScoreEvents/{eventId} {
         allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
-        // Only written by the Admin SDK (Cloud Functions bypass rules).
-        allow write: if false;
+        // Beyond the Admin SDK (which bypasses rules entirely, used by the
+        // Phase 11 auto-cancel job), an admin may also append an event
+        // client-side for manual trust score overrides. Never the affected
+        // user themselves — a trust score can't be self-inflated.
+        allow create: if isAdmin() && request.resource.data.type == 'manual_admin_adjustment';
+        allow update, delete: if false;
       }
     }
 
@@ -117,7 +121,8 @@ service cloud.firestore {
 
       match /trustScoreEvents/{eventId} {
         allow read: if isSignedIn() && (isAgencyMember(agencyId) || isAdmin());
-        allow write: if false;
+        allow create: if isAdmin() && request.resource.data.type == 'manual_admin_adjustment';
+        allow update, delete: if false;
       }
     }
 

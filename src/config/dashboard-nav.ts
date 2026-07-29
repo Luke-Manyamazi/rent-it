@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   Users,
   Building2,
+  FlagTriangleRight,
   type LucideIcon,
 } from 'lucide-react'
 import type { UserRole } from '@/types/user'
@@ -45,10 +46,11 @@ const AGENCY_NAV: DashboardNavItem[] = [
   { label: 'My account', href: '/dashboard/agency/account', icon: UserCircle },
 ]
 
-// Admin dashboard is built in a later phase — a single link keeps the
-// shared DashboardLayout sidebar meaningful until then.
 const ADMIN_NAV: DashboardNavItem[] = [
   { label: 'Overview', href: '/dashboard/admin', icon: LayoutDashboard, end: true },
+  { label: 'Users', href: '/dashboard/admin/users', icon: Users },
+  { label: 'Agencies', href: '/dashboard/admin/agencies', icon: Building2 },
+  { label: 'Fraud reports', href: '/dashboard/admin/fraud-flags', icon: FlagTriangleRight },
 ]
 
 export function getDashboardNavItems(role: UserRole): DashboardNavItem[] {
