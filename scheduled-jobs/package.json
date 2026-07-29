@@ -1,0 +1,14 @@
+{
+  "name": "rentit-scheduled-jobs",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "dependencies": {
+    "firebase-admin": "^14.2.0",
+    "@vercel/config": "^0.5.5"
+  },
+  "devDependencies": {
+    "@vercel/node": "^5.9.2",
+    "typescript": "^5.9.3"
+  }
+}

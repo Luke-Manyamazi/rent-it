@@ -4,11 +4,18 @@ Web-first SaaS rental marketplace. This document covers the data model,
 security model, and the future-expansion plan referenced throughout the
 build (RentIT Bulawayo/Harare/Zimbabwe, native apps, white-label, public API).
 
-## Backend split: Firebase + Supabase
+## Backend split: Firebase + Supabase + Vercel
 
 - **Firebase**: Auth, Firestore (database of record), Cloud Messaging.
 - **Supabase**: Storage only (property photos, avatars, agency logos,
   verification documents, chat attachments).
+- **Vercel**: one scheduled job (`scheduled-jobs/`) — the Verified Before
+  You Travel auto-cancellation sweep. See that section below.
+
+Both the Supabase and Vercel pieces exist for the same reason: Firebase
+Storage and Firebase Cloud Functions each require the Blaze (pay-as-you-go)
+billing plan, which this project deliberately avoids during early
+development.
 
 This split exists because Firebase Storage now requires the Blaze
 (pay-as-you-go) billing plan to enable, even to stay within free-tier usage,
@@ -48,11 +55,12 @@ read Firestore natively without a JWT bridge.
 
 Firestore security rules look up a user's role from their own document
 (`users/{uid}.role`) via `get()`, rather than an Auth custom claim. Setting
-custom claims requires the Admin SDK — a Cloud Function — and Cloud
-Functions are deferred to Phase 11. Once they exist, `userRole()` /
-`userAgencyId()` in `firestore.rules` should switch to
-`request.auth.token.role` / `request.auth.token.agencyId` for lower latency
-and cost; the rule shapes stay the same.
+custom claims needs the Admin SDK running server-side with Auth-admin
+permissions — Phase 11's `scheduled-jobs` service deliberately doesn't have
+those (it's scoped to `roles/datastore.user` only, for the booking sweep).
+Adding a claims-setting endpoint there would be a small extension, not a
+new architecture, if this ever becomes a bottleneck; until then `userRole()`
+in `firestore.rules` costs one extra document read per rule evaluation.
 
 The first admin account has no self-service path (rules block creating or
 promoting to role `admin` from the client) — it's set by hand in the
@@ -122,16 +130,32 @@ pending → confirmed → availability_confirmed → completed
   (typically 24h before `proposedViewingTime`).
 - The owner must reconfirm availability before that deadline
   (`availabilityConfirmedAt` gets set).
-- A scheduled Cloud Function (Phase 11) sweeps bookings past their deadline
-  without confirmation, transitions them to
-  `auto_cancelled_no_confirmation`, and appends a `booking_auto_cancelled`
-  `TrustScoreEvent` with a negative delta against the owner (or their
-  agency). Firestore rules never allow a client to write that status
-  transition directly — only the Admin SDK can, since it bypasses rules.
-- Repeated `booking_auto_cancelled` events are what should trigger listing
-  suspension (Phase 8 admin tooling reads the trust score / event history to
-  decide this — the threshold itself is a product decision for that phase,
-  not hardcoded into the schema).
+- A scheduled job sweeps bookings past their deadline without confirmation,
+  transitions them to `auto_cancelled_no_confirmation`, and appends a
+  `booking_auto_cancelled` `TrustScoreEvent` with a negative delta (-5)
+  against the owner (or their agency). Firestore rules never allow a client
+  to write that status transition directly — only the Admin SDK can, since
+  it bypasses rules.
+- **This job runs on Vercel Cron, not Firebase Cloud Functions** —
+  `scheduled-jobs/api/sweep-bookings.ts`, deployed as its own Vercel project
+  (`rentit-booking-sweep`), separate from the main frontend. Cloud Functions
+  require the Blaze billing plan, the same wall hit for Firebase Storage
+  (see above); a minimally-scoped service account
+  (`rentit-booking-sweep@...`, `roles/datastore.user` only) gives the job
+  Admin SDK access without it. See `scheduled-jobs/README.md` for the
+  deployment details.
+- **Known limitation**: Vercel's free Hobby plan restricts cron jobs to
+  once daily, so the sweep runs once a day rather than every 15-30 minutes.
+  A booking whose deadline passes could sit unconfirmed for up to ~24h
+  before auto-cancelling. Upgrading to Vercel Pro removes this limit; the
+  alternative considered and rejected was a Firestore-rules-enforced
+  transition (using `request.time` to allow the client to trigger its own
+  overdue booking's cancellation) — free and instant-on-page-load, but only
+  fires when someone actually opens the booking, which was judged less
+  predictable than a real (if infrequent) scheduled sweep.
+- Repeated `booking_auto_cancelled` events trigger listing suspension: 3
+  strikes suspends all of that owner's currently-active listings (also
+  handled inside the sweep job, since it already has Admin SDK access).
 
 ## Future expansion (documented now, not built)
 

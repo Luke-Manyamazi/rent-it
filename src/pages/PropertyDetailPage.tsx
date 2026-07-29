@@ -6,7 +6,6 @@ import {
   Ruler,
   MapPin,
   ShieldCheck,
-  CalendarClock,
   MessageCircle,
   Loader2,
   ImageOff,
@@ -19,6 +18,7 @@ import { useProperty } from '@/features/property/api/properties'
 import { useAgency } from '@/features/agency/hooks/useAgency'
 import { useUserPublicProfile } from '@/features/account/hooks/useUserPublicProfile'
 import { SaveButton } from '@/features/property/components/SaveButton'
+import { BookingRequestDialog } from '@/features/booking/components/BookingRequestDialog'
 import { amenityOptions } from '@/features/property/schemas'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 
@@ -182,10 +182,7 @@ export function PropertyDetailPage() {
                 </p>
               )}
               <div className="mt-4 space-y-2">
-                <Button className="w-full" onClick={() => onComingSoon('Booking a viewing')}>
-                  <CalendarClock className="size-4" />
-                  Book a viewing
-                </Button>
+                <BookingRequestDialog property={property} />
                 <Button
                   variant="outline"
                   className="w-full"

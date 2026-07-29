@@ -25,6 +25,8 @@ import { PropertyDetailPage } from '@/pages/PropertyDetailPage'
 import { PropertyListPage } from '@/pages/PropertyListPage'
 import { PropertyCreatePage } from '@/pages/PropertyCreatePage'
 import { PropertyEditPage } from '@/pages/PropertyEditPage'
+import { TenantBookingsPage } from '@/pages/TenantBookingsPage'
+import { OwnerBookingsPage } from '@/pages/OwnerBookingsPage'
 import { PlaceholderPage } from '@/components/common/PlaceholderPage'
 import {
   RequireAuth,
@@ -93,15 +95,7 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <TenantOverviewPage /> },
           { path: 'saved', element: <TenantSavedListingsPage /> },
-          {
-            path: 'bookings',
-            element: (
-              <PlaceholderPage
-                title="Your bookings"
-                description="Viewing requests will appear here once you book your first one."
-              />
-            ),
-          },
+          { path: 'bookings', element: <TenantBookingsPage /> },
           {
             path: 'messages',
             element: (
@@ -126,15 +120,7 @@ export const router = createBrowserRouter([
           { path: 'properties', element: <PropertyListPage /> },
           { path: 'properties/new', element: <PropertyCreatePage /> },
           { path: 'properties/:id/edit', element: <PropertyEditPage /> },
-          {
-            path: 'bookings',
-            element: (
-              <PlaceholderPage
-                title="Bookings"
-                description="Viewing requests and Verified Before You Travel confirmations will appear here once the booking system lands."
-              />
-            ),
-          },
+          { path: 'bookings', element: <OwnerBookingsPage /> },
           { path: 'trust-score', element: <TrustScorePage /> },
           { path: 'profile', element: <AccountProfilePage /> },
         ],
@@ -151,15 +137,7 @@ export const router = createBrowserRouter([
           { path: 'properties', element: <PropertyListPage /> },
           { path: 'properties/new', element: <PropertyCreatePage /> },
           { path: 'properties/:id/edit', element: <PropertyEditPage /> },
-          {
-            path: 'bookings',
-            element: (
-              <PlaceholderPage
-                title="Bookings"
-                description="Viewing requests and Verified Before You Travel confirmations will appear here once the booking system lands."
-              />
-            ),
-          },
+          { path: 'bookings', element: <OwnerBookingsPage /> },
           { path: 'team', element: <AgencyTeamPage /> },
           { path: 'trust-score', element: <TrustScorePage /> },
           { path: 'agency-profile', element: <AgencyProfilePage /> },
