@@ -5,6 +5,7 @@ import {
   ShieldCheck,
   TrendingUp,
   AlertTriangle,
+  CreditCard,
   Bell,
   type LucideIcon,
 } from 'lucide-react'
@@ -25,6 +26,8 @@ const ICONS: Record<AppNotification['type'], LucideIcon> = {
   listing_verified: ShieldCheck,
   trust_score_changed: TrendingUp,
   subscription_expiring: AlertTriangle,
+  subscription_payment_approved: CreditCard,
+  subscription_payment_rejected: CreditCard,
   admin_alert: AlertTriangle,
 }
 

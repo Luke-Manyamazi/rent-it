@@ -7,12 +7,6 @@ export type SubscriptionStatus =
   | 'past_due'
   | 'cancelled'
 
-/**
- * SaaS billing scaffold for agencies. Payment processing (Paynow, EcoCash,
- * InnBucks, Mukuru) is documented in ARCHITECTURE.md but not implemented
- * until Phase 14 — `paymentProvider`/`externalCustomerId` stay null until
- * then, and the plan is enforced purely by `listingLimit` in the meantime.
- */
 export interface Subscription {
   agencyId: string
   tier: SubscriptionTier
@@ -20,8 +14,38 @@ export interface Subscription {
   listingLimit: number
   trialEndsAt: Timestamp | null
   currentPeriodEnd: Timestamp | null
-  paymentProvider: 'paynow' | 'ecocash' | 'innbucks' | 'mukuru' | null
+  paymentProvider: 'paynow' | 'ecocash' | 'innbucks' | 'mukuru' | 'bank' | null
   externalCustomerId: string | null
+  createdAt: Timestamp
+  updatedAt: Timestamp
+}
+
+/**
+ * Phase 14: no real payment gateway integration exists (client-only SPA, no
+ * merchant credentials/backend for EcoCash or bank APIs), so billing is
+ * proof-of-payment + admin approval — the agency submits a reference (and
+ * optional screenshot), an admin reviews it in the admin dashboard, and
+ * approval is what actually creates/updates the `subscriptions/{agencyId}`
+ * doc above.
+ */
+export type PaymentMethod = 'ecocash' | 'bank'
+
+export type PaymentSubmissionStatus = 'pending' | 'approved' | 'rejected'
+
+export interface SubscriptionPaymentSubmission {
+  id: string
+  agencyId: string
+  submittedByUid: string
+  requestedTier: SubscriptionTier
+  amountUsd: number
+  paymentMethod: PaymentMethod
+  referenceNumber: string
+  proofImageUrl: string | null
+  proofImageStoragePath: string | null
+  status: PaymentSubmissionStatus
+  adminNote: string | null
+  reviewedBy: string | null
+  reviewedAt: Timestamp | null
   createdAt: Timestamp
   updatedAt: Timestamp
 }

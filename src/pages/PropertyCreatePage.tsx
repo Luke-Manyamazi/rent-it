@@ -6,6 +6,7 @@ import { PropertyForm } from '@/features/property/components/PropertyForm'
 import type { PhotoItem } from '@/features/property/components/PhotoUploadManager'
 import { createDraftProperty, setPropertyPhotos, publishProperty } from '@/features/property/api/properties'
 import { uploadPropertyPhoto } from '@/features/property/api/photos'
+import { checkAgencyListingLimit } from '@/features/subscription/api/subscription'
 import type { PropertyFormInput, PropertyFormValues } from '@/features/property/schemas'
 
 const EMPTY_VALUES: PropertyFormInput = {
@@ -41,6 +42,22 @@ export function PropertyCreatePage() {
       return
     }
     const ownerType = isAgency ? 'agency' : 'landlord'
+
+    if (isAgency) {
+      const { allowed, limit } = await checkAgencyListingLimit(resolvedOwnerId)
+      if (!allowed) {
+        toast.error(
+          `You've reached your plan's limit of ${limit} active listings. Upgrade to add more.`,
+          {
+            action: {
+              label: 'Upgrade',
+              onClick: () => navigate('/dashboard/agency/subscription'),
+            },
+          }
+        )
+        return
+      }
+    }
 
     try {
       const propertyId = await createDraftProperty({

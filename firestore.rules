@@ -259,12 +259,34 @@ service cloud.firestore {
     }
 
     // ---------------------------------------------------------------------
-    // subscriptions — billing state is server/admin controlled even before
-    // real payment integration exists (Phase 14).
+    // subscriptions — billing state is server/admin controlled. No real
+    // payment gateway integration exists (Phase 14 uses manual proof-of-payment
+    // + admin approval, see subscriptionPaymentSubmissions below), so this doc
+    // is only ever written by an admin approving a submission.
     // ---------------------------------------------------------------------
     match /subscriptions/{agencyId} {
       allow read: if isSignedIn() && (isAgencyMember(agencyId) || isAdmin());
       allow write: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------------
+    // subscriptionPaymentSubmissions — an agency member submits proof of an
+    // EcoCash/bank payment (reference number, optional screenshot); only an
+    // admin can transition it from 'pending' to 'approved'/'rejected'
+    // (approval is what actually writes the subscriptions/{agencyId} doc
+    // above, from admin/api/subscriptions.ts).
+    // ---------------------------------------------------------------------
+    match /subscriptionPaymentSubmissions/{submissionId} {
+      allow read: if isSignedIn() &&
+        (isAgencyMember(resource.data.agencyId) || isAdmin());
+      allow create: if isSignedIn() &&
+        isAgencyMember(request.resource.data.agencyId) &&
+        request.resource.data.submittedByUid == request.auth.uid &&
+        request.resource.data.status == 'pending';
+      allow update: if isAdmin() &&
+        resource.data.status == 'pending' &&
+        request.resource.data.status in ['approved', 'rejected'];
+      allow delete: if isAdmin();
     }
 
     // ---------------------------------------------------------------------

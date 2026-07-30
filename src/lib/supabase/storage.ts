@@ -4,6 +4,7 @@ export const STORAGE_BUCKETS = {
   agencyLogos: 'agency-logos',
   verificationDocuments: 'verification-documents',
   chatAttachments: 'chat-attachments',
+  paymentProofs: 'payment-proofs',
 } as const
 
 /**
@@ -42,4 +43,8 @@ export function agencyLogoPath(agencyOwnerUid: string, fileName: string) {
 
 export function chatAttachmentPath(conversationId: string, fileName: string) {
   return `${conversationId}/${fileName}`
+}
+
+export function paymentProofPath(uid: string, fileName: string) {
+  return `${uid}/${fileName}`
 }

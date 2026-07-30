@@ -13,11 +13,13 @@ import { LandlordOverviewPage } from '@/pages/LandlordOverviewPage'
 import { AgencyOverviewPage } from '@/pages/AgencyOverviewPage'
 import { AgencyTeamPage } from '@/pages/AgencyTeamPage'
 import { AgencyProfilePage } from '@/pages/AgencyProfilePage'
+import { AgencySubscriptionPage } from '@/pages/AgencySubscriptionPage'
 import { AdminOverviewPage } from '@/pages/AdminOverviewPage'
 import { AdminUsersPage } from '@/pages/AdminUsersPage'
 import { AdminAgenciesPage } from '@/pages/AdminAgenciesPage'
 import { AdminFraudFlagsPage } from '@/pages/AdminFraudFlagsPage'
 import { AdminListingsPage } from '@/pages/AdminListingsPage'
+import { AdminSubscriptionsPage } from '@/pages/AdminSubscriptionsPage'
 import { TrustScorePage } from '@/pages/TrustScorePage'
 import { AccountProfilePage } from '@/pages/AccountProfilePage'
 import { ListingsPage } from '@/pages/ListingsPage'
@@ -143,6 +145,7 @@ export const router = createBrowserRouter([
           { path: 'notifications', element: <NotificationsPage /> },
           { path: 'team', element: <AgencyTeamPage /> },
           { path: 'trust-score', element: <TrustScorePage /> },
+          { path: 'subscription', element: <AgencySubscriptionPage /> },
           { path: 'agency-profile', element: <AgencyProfilePage /> },
           { path: 'account', element: <AccountProfilePage /> },
         ],
@@ -160,6 +163,7 @@ export const router = createBrowserRouter([
           { path: 'agencies', element: <AdminAgenciesPage /> },
           { path: 'listings', element: <AdminListingsPage /> },
           { path: 'fraud-flags', element: <AdminFraudFlagsPage /> },
+          { path: 'subscriptions', element: <AdminSubscriptionsPage /> },
           { path: 'notifications', element: <NotificationsPage /> },
         ],
       },

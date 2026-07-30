@@ -28,7 +28,9 @@ export function notificationLink(notification: AppNotification, role: UserRole |
     case 'trust_score_changed':
       return role === 'agency' ? '/dashboard/agency/trust-score' : '/dashboard/landlord/trust-score'
     case 'subscription_expiring':
-      return '/dashboard/agency/agency-profile'
+    case 'subscription_payment_approved':
+    case 'subscription_payment_rejected':
+      return '/dashboard/agency/subscription'
     case 'admin_alert':
       return '/dashboard/admin'
     default:

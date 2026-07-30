@@ -11,6 +11,8 @@ export type NotificationType =
   | 'listing_verified'
   | 'trust_score_changed'
   | 'subscription_expiring'
+  | 'subscription_payment_approved'
+  | 'subscription_payment_rejected'
   | 'admin_alert'
 
 export interface AppNotification {

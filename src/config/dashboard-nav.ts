@@ -9,6 +9,7 @@ import {
   Users,
   Building2,
   FlagTriangleRight,
+  CreditCard,
   type LucideIcon,
 } from 'lucide-react'
 import type { UserRole } from '@/types/user'
@@ -44,6 +45,7 @@ const AGENCY_NAV: DashboardNavItem[] = [
   { label: 'Messages', href: '/dashboard/agency/messages', icon: MessageCircle },
   { label: 'Team', href: '/dashboard/agency/team', icon: Users },
   { label: 'Trust score', href: '/dashboard/agency/trust-score', icon: ShieldCheck },
+  { label: 'Subscription', href: '/dashboard/agency/subscription', icon: CreditCard },
   { label: 'Agency profile', href: '/dashboard/agency/agency-profile', icon: Building2 },
   { label: 'My account', href: '/dashboard/agency/account', icon: UserCircle },
 ]
@@ -54,6 +56,7 @@ const ADMIN_NAV: DashboardNavItem[] = [
   { label: 'Agencies', href: '/dashboard/admin/agencies', icon: Building2 },
   { label: 'Listings', href: '/dashboard/admin/listings', icon: Home },
   { label: 'Fraud reports', href: '/dashboard/admin/fraud-flags', icon: FlagTriangleRight },
+  { label: 'Subscriptions', href: '/dashboard/admin/subscriptions', icon: CreditCard },
 ]
 
 export function getDashboardNavItems(role: UserRole): DashboardNavItem[] {
