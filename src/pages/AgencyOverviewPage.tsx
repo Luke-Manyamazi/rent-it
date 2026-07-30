@@ -5,11 +5,16 @@ import { Button } from '@/components/ui/button'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useAgency } from '@/features/agency/hooks/useAgency'
 import { useAgencyMembers } from '@/features/agency/hooks/useAgencyMembers'
+import { useBookingsForOwner } from '@/features/booking/api/bookings'
+
+const PENDING_BOOKING_STATUSES = ['pending', 'confirmed']
 
 export function AgencyOverviewPage() {
   const { profile } = useAuth()
   const { agency } = useAgency(profile?.agencyId ?? undefined)
   const { members } = useAgencyMembers(profile?.agencyId ?? undefined)
+  const { bookings } = useBookingsForOwner(profile?.agencyId ?? undefined)
+  const pendingBookingCount = bookings.filter((b) => PENDING_BOOKING_STATUSES.includes(b.status)).length
 
   return (
     <div className="space-y-6">
@@ -42,7 +47,7 @@ export function AgencyOverviewPage() {
               <CalendarClock className="size-4.5" />
             </span>
             <div>
-              <p className="text-2xl font-semibold">0</p>
+              <p className="text-2xl font-semibold">{pendingBookingCount}</p>
               <p className="text-muted-foreground text-xs">Pending viewing requests</p>
             </div>
           </CardContent>

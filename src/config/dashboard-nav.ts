@@ -10,6 +10,7 @@ import {
   Building2,
   FlagTriangleRight,
   CreditCard,
+  BarChart3,
   type LucideIcon,
 } from 'lucide-react'
 import type { UserRole } from '@/types/user'
@@ -34,6 +35,7 @@ const LANDLORD_NAV: DashboardNavItem[] = [
   { label: 'My properties', href: '/dashboard/landlord/properties', icon: Home },
   { label: 'Bookings', href: '/dashboard/landlord/bookings', icon: CalendarClock },
   { label: 'Messages', href: '/dashboard/landlord/messages', icon: MessageCircle },
+  { label: 'Analytics', href: '/dashboard/landlord/analytics', icon: BarChart3 },
   { label: 'Trust score', href: '/dashboard/landlord/trust-score', icon: ShieldCheck },
   { label: 'Profile', href: '/dashboard/landlord/profile', icon: UserCircle },
 ]
@@ -43,6 +45,7 @@ const AGENCY_NAV: DashboardNavItem[] = [
   { label: 'Properties', href: '/dashboard/agency/properties', icon: Home },
   { label: 'Bookings', href: '/dashboard/agency/bookings', icon: CalendarClock },
   { label: 'Messages', href: '/dashboard/agency/messages', icon: MessageCircle },
+  { label: 'Analytics', href: '/dashboard/agency/analytics', icon: BarChart3 },
   { label: 'Team', href: '/dashboard/agency/team', icon: Users },
   { label: 'Trust score', href: '/dashboard/agency/trust-score', icon: ShieldCheck },
   { label: 'Subscription', href: '/dashboard/agency/subscription', icon: CreditCard },
@@ -52,6 +55,7 @@ const AGENCY_NAV: DashboardNavItem[] = [
 
 const ADMIN_NAV: DashboardNavItem[] = [
   { label: 'Overview', href: '/dashboard/admin', icon: LayoutDashboard, end: true },
+  { label: 'Analytics', href: '/dashboard/admin/analytics', icon: BarChart3 },
   { label: 'Users', href: '/dashboard/admin/users', icon: Users },
   { label: 'Agencies', href: '/dashboard/admin/agencies', icon: Building2 },
   { label: 'Listings', href: '/dashboard/admin/listings', icon: Home },

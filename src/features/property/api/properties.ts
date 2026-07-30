@@ -5,6 +5,7 @@ import {
   deleteDoc,
   doc,
   getDoc,
+  increment,
   limit as fbLimit,
   onSnapshot,
   orderBy,
@@ -15,7 +16,7 @@ import {
   where,
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase/config'
-import type { Property, PropertyPhoto } from '@/types/property'
+import type { Property, PropertyPhoto, PropertyStatus } from '@/types/property'
 import type { PropertyFormValues } from '@/features/property/schemas'
 import { deletePropertyPhoto } from '@/features/property/api/photos'
 
@@ -102,19 +103,61 @@ export async function setPropertyPhotos(propertyId: string, photos: PropertyPhot
   })
 }
 
-export async function publishProperty(propertyId: string) {
-  await updateDoc(doc(db, 'properties', propertyId), {
-    status: 'active',
+/** Net change in "active" count when a property's status changes — 0 unless
+ *  the transition crosses into or out of 'active'. */
+function activeDelta(oldStatus: PropertyStatus, newStatus: PropertyStatus) {
+  const wasActive = oldStatus === 'active'
+  const isActive = newStatus === 'active'
+  if (wasActive === isActive) return 0
+  return isActive ? 1 : -1
+}
+
+async function adjustAgencyActiveListingCount(agencyId: string, delta: number) {
+  if (delta === 0) return
+  await updateDoc(doc(db, 'agencies', agencyId), {
+    activeListingCount: increment(delta),
     updatedAt: serverTimestamp(),
   })
 }
 
-export async function setPropertyStatus(
+/** Shared by any code path that changes a property's status (this file's
+ *  `setPropertyStatus` and the admin suspend/unsuspend flow) so agency
+ *  `activeListingCount` stays correct regardless of which flow changed it. */
+export async function adjustAgencyActiveListingCountForStatusChange(
+  property: Property,
+  newStatus: PropertyStatus
+) {
+  if (property.ownerType !== 'agency') return
+  await adjustAgencyActiveListingCount(property.ownerId, activeDelta(property.status, newStatus))
+}
+
+export async function publishProperty(
   propertyId: string,
-  status: Property['status']
+  ownerId: string,
+  ownerType: 'landlord' | 'agency'
 ) {
   await updateDoc(doc(db, 'properties', propertyId), {
+    status: 'active',
+    updatedAt: serverTimestamp(),
+  })
+  // A freshly created draft's prior status is always 'draft', so this is
+  // unconditionally a +1 (see activeDelta) once it goes live.
+  if (ownerType === 'agency') {
+    await adjustAgencyActiveListingCount(ownerId, 1)
+  }
+}
+
+export async function setPropertyStatus(property: Property, status: PropertyStatus) {
+  await updateDoc(doc(db, 'properties', property.id), {
     status,
+    updatedAt: serverTimestamp(),
+  })
+  await adjustAgencyActiveListingCountForStatusChange(property, status)
+}
+
+export async function incrementPropertyViewCount(propertyId: string) {
+  await updateDoc(doc(db, 'properties', propertyId), {
+    viewCount: increment(1),
     updatedAt: serverTimestamp(),
   })
 }
@@ -122,6 +165,9 @@ export async function setPropertyStatus(
 export async function deleteProperty(property: Property) {
   await Promise.all(property.photos.map((photo) => deletePropertyPhoto(photo.storagePath)))
   await deleteDoc(doc(db, 'properties', property.id))
+  if (property.ownerType === 'agency' && property.status === 'active') {
+    await adjustAgencyActiveListingCount(property.ownerId, -1)
+  }
 }
 
 interface OwnerPropertiesSnapshot {

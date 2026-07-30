@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
@@ -22,9 +22,14 @@ import { signUpWithEmail, signInWithGoogle } from '@/features/auth/api/auth'
 import { getAuthErrorMessage } from '@/features/auth/api/error-messages'
 import type { UserRole } from '@/types/user'
 
+const PRESELECTABLE_ROLES: Exclude<UserRole, 'admin'>[] = ['tenant', 'landlord', 'agency']
+
 export function SignupPage() {
   const navigate = useNavigate()
-  const [role, setRole] = useState<Exclude<UserRole, 'admin'> | null>(null)
+  const [searchParams] = useSearchParams()
+  const roleParam = searchParams.get('role')
+  const preselectedRole = PRESELECTABLE_ROLES.find((r) => r === roleParam) ?? null
+  const [role, setRole] = useState<Exclude<UserRole, 'admin'> | null>(preselectedRole)
   const [submitting, setSubmitting] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
 

@@ -76,7 +76,7 @@ export function PropertyCreatePage() {
         await setPropertyPhotos(propertyId, uploaded)
       }
 
-      await publishProperty(propertyId)
+      await publishProperty(propertyId, resolvedOwnerId, ownerType)
       toast.success('Listing published.')
       navigate(basePath)
     } catch {

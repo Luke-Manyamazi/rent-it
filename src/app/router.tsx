@@ -15,6 +15,8 @@ import { AgencyTeamPage } from '@/pages/AgencyTeamPage'
 import { AgencyProfilePage } from '@/pages/AgencyProfilePage'
 import { AgencySubscriptionPage } from '@/pages/AgencySubscriptionPage'
 import { AdminOverviewPage } from '@/pages/AdminOverviewPage'
+import { AdminAnalyticsPage } from '@/pages/AdminAnalyticsPage'
+import { OwnerAnalyticsPage } from '@/pages/OwnerAnalyticsPage'
 import { AdminUsersPage } from '@/pages/AdminUsersPage'
 import { AdminAgenciesPage } from '@/pages/AdminAgenciesPage'
 import { AdminFraudFlagsPage } from '@/pages/AdminFraudFlagsPage'
@@ -32,7 +34,9 @@ import { OwnerBookingsPage } from '@/pages/OwnerBookingsPage'
 import { ConversationListPage } from '@/pages/ConversationListPage'
 import { ConversationThreadPage } from '@/pages/ConversationThreadPage'
 import { NotificationsPage } from '@/pages/NotificationsPage'
-import { PlaceholderPage } from '@/components/common/PlaceholderPage'
+import { HowItWorksPage } from '@/pages/HowItWorksPage'
+import { VerifiedBeforeYouTravelPage } from '@/pages/VerifiedBeforeYouTravelPage'
+import { ListPropertyPage } from '@/pages/ListPropertyPage'
 import {
   RequireAuth,
   RequireProfile,
@@ -47,20 +51,9 @@ export const router = createBrowserRouter([
       { path: '/', element: <LandingPage /> },
       { path: '/listings', element: <ListingsPage /> },
       { path: '/listings/:id', element: <PropertyDetailPage /> },
-      {
-        path: '/list-property',
-        element: (
-          <PlaceholderPage title="List Your Property" description="Landlord onboarding" />
-        ),
-      },
-      {
-        path: '/how-it-works',
-        element: <PlaceholderPage title="How It Works" />,
-      },
-      {
-        path: '/verified-before-you-travel',
-        element: <PlaceholderPage title="Verified Before You Travel" />,
-      },
+      { path: '/list-property', element: <ListPropertyPage /> },
+      { path: '/how-it-works', element: <HowItWorksPage /> },
+      { path: '/verified-before-you-travel', element: <VerifiedBeforeYouTravelPage /> },
       { path: '/login', element: <LoginPage /> },
       { path: '/signup', element: <SignupPage /> },
       {
@@ -123,6 +116,7 @@ export const router = createBrowserRouter([
           { path: 'messages', element: <ConversationListPage /> },
           { path: 'messages/:id', element: <ConversationThreadPage /> },
           { path: 'notifications', element: <NotificationsPage /> },
+          { path: 'analytics', element: <OwnerAnalyticsPage /> },
           { path: 'trust-score', element: <TrustScorePage /> },
           { path: 'profile', element: <AccountProfilePage /> },
         ],
@@ -143,6 +137,7 @@ export const router = createBrowserRouter([
           { path: 'messages', element: <ConversationListPage /> },
           { path: 'messages/:id', element: <ConversationThreadPage /> },
           { path: 'notifications', element: <NotificationsPage /> },
+          { path: 'analytics', element: <OwnerAnalyticsPage /> },
           { path: 'team', element: <AgencyTeamPage /> },
           { path: 'trust-score', element: <TrustScorePage /> },
           { path: 'subscription', element: <AgencySubscriptionPage /> },
@@ -159,6 +154,7 @@ export const router = createBrowserRouter([
         ),
         children: [
           { index: true, element: <AdminOverviewPage /> },
+          { path: 'analytics', element: <AdminAnalyticsPage /> },
           { path: 'users', element: <AdminUsersPage /> },
           { path: 'agencies', element: <AdminAgenciesPage /> },
           { path: 'listings', element: <AdminListingsPage /> },

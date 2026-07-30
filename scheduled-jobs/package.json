@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "scripts": {
+    "bootstrap-admin": "node scripts/bootstrap-admin.mjs"
+  },
   "dependencies": {
     "firebase-admin": "^14.2.0",
     "@vercel/config": "^0.5.5"

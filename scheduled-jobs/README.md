@@ -27,3 +27,21 @@ variables (set in the Vercel dashboard, never committed):
   service account, scoped to `roles/datastore.user` only.
 - `CRON_SECRET` — Vercel automatically sends this as a bearer token on
   cron-triggered requests; the function rejects anything else.
+
+## Bootstrapping an admin
+
+`scripts/bootstrap-admin.mjs` is a local-only CLI (not deployed) that
+promotes a user to the `admin` role. Firestore rules only let an *existing*
+admin set `role: 'admin'` on another user's document, so this is how the
+first admin gets created:
+
+```
+FIREBASE_SERVICE_ACCOUNT_KEY=$(cat service-account.json) \
+  npm run bootstrap-admin -- someone@example.com
+```
+
+This needs a service account with Firestore access plus the "Firebase
+Authentication Admin" role (to resolve the email to a uid) — the scoped-down
+`rentit-booking-sweep` account above isn't enough. Use the project's default
+`firebase-adminsdk` service account key instead, downloaded from Firebase
+Console → Project settings → Service accounts.

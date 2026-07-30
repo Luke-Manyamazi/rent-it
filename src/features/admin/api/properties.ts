@@ -3,6 +3,7 @@ import { collection, doc, limit, onSnapshot, orderBy, query, updateDoc, serverTi
 import { db } from '@/lib/firebase/config'
 import type { Property } from '@/types/property'
 import { createNotification } from '@/features/notifications/api/notifications'
+import { adjustAgencyActiveListingCountForStatusChange } from '@/features/property/api/properties'
 
 export function useAllProperties(rowLimit = 200) {
   const [properties, setProperties] = useState<Property[] | null>(null)
@@ -35,10 +36,12 @@ export async function setPropertySuspended(
   suspended: boolean,
   previousStatus: Property['status']
 ) {
+  const newStatus = suspended ? 'suspended' : previousStatus === 'suspended' ? 'active' : previousStatus
   await updateDoc(doc(db, 'properties', property.id), {
-    status: suspended ? 'suspended' : previousStatus === 'suspended' ? 'active' : previousStatus,
+    status: newStatus,
     updatedAt: serverTimestamp(),
   })
+  await adjustAgencyActiveListingCountForStatusChange(property, newStatus)
   if (suspended) {
     await createNotification(
       property.ownerId,

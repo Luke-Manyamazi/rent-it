@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import {
   BedDouble,
@@ -11,7 +12,8 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { useProperty } from '@/features/property/api/properties'
+import { useAuth } from '@/features/auth/hooks/useAuth'
+import { useProperty, incrementPropertyViewCount } from '@/features/property/api/properties'
 import { useAgency } from '@/features/agency/hooks/useAgency'
 import { useUserPublicProfile } from '@/features/account/hooks/useUserPublicProfile'
 import { SaveButton } from '@/features/property/components/SaveButton'
@@ -58,6 +60,19 @@ function OwnerCard({ ownerType, ownerId }: { ownerType: 'landlord' | 'agency'; o
 export function PropertyDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { property, loading } = useProperty(id)
+  const { profile } = useAuth()
+  const countedPropertyId = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (!property || countedPropertyId.current === property.id) return
+    const isOwnerViewing =
+      (property.ownerType === 'landlord' && profile?.id === property.ownerId) ||
+      (property.ownerType === 'agency' && profile?.agencyId === property.ownerId)
+    if (isOwnerViewing) return
+
+    countedPropertyId.current = property.id
+    incrementPropertyViewCount(property.id)
+  }, [property, profile])
 
   if (loading) {
     return (

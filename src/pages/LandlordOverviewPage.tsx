@@ -3,9 +3,17 @@ import { Home, CalendarClock, ShieldCheck, PlusCircle } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { usePropertiesByOwner } from '@/features/property/api/properties'
+import { useBookingsForOwner } from '@/features/booking/api/bookings'
+
+const PENDING_BOOKING_STATUSES = ['pending', 'confirmed']
 
 export function LandlordOverviewPage() {
   const { profile } = useAuth()
+  const { properties } = usePropertiesByOwner(profile?.id ?? undefined)
+  const activeListingCount = properties.filter((p) => p.status === 'active').length
+  const { bookings } = useBookingsForOwner(profile?.id ?? undefined)
+  const pendingBookingCount = bookings.filter((b) => PENDING_BOOKING_STATUSES.includes(b.status)).length
 
   return (
     <div className="space-y-6">
@@ -25,7 +33,7 @@ export function LandlordOverviewPage() {
               <Home className="size-4.5" />
             </span>
             <div>
-              <p className="text-2xl font-semibold">0</p>
+              <p className="text-2xl font-semibold">{activeListingCount}</p>
               <p className="text-muted-foreground text-xs">Active listings</p>
             </div>
           </CardContent>
@@ -36,7 +44,7 @@ export function LandlordOverviewPage() {
               <CalendarClock className="size-4.5" />
             </span>
             <div>
-              <p className="text-2xl font-semibold">0</p>
+              <p className="text-2xl font-semibold">{pendingBookingCount}</p>
               <p className="text-muted-foreground text-xs">Pending viewing requests</p>
             </div>
           </CardContent>
