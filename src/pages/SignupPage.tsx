@@ -18,6 +18,7 @@ import {
 import { RoleSelector } from '@/features/auth/components/RoleSelector'
 import { GoogleIcon } from '@/features/auth/components/GoogleIcon'
 import { signupSchema, type SignupValues } from '@/features/auth/schemas'
+import { VIEWING_FEE_USD } from '@/config/constants'
 import { signUpWithEmail, signInWithGoogle } from '@/features/auth/api/auth'
 import { getAuthErrorMessage } from '@/features/auth/api/error-messages'
 import type { UserRole } from '@/types/user'
@@ -83,7 +84,8 @@ export function SignupPage() {
       >
         <h1 className="text-2xl font-semibold tracking-tight">Create your account</h1>
         <p className="text-muted-foreground mt-1 text-sm">
-          Join RentIT Masvingo — verified listings, no viewing fees.
+          Join RentIT Masvingo — verified listings, a ${VIEWING_FEE_USD} refundable viewing fee
+          instead of $40 to see five houses.
         </p>
 
         <div className="mt-6">

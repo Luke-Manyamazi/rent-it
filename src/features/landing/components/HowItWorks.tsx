@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import { Search, CalendarCheck, KeyRound } from 'lucide-react'
+import { VIEWING_FEE_USD } from '@/config/constants'
 
 const STEPS = [
   {
@@ -10,9 +11,9 @@ const STEPS = [
   },
   {
     icon: CalendarCheck,
-    title: 'Book a viewing, free',
+    title: `Book a viewing for $${VIEWING_FEE_USD}`,
     description:
-      'Request a viewing time with no upfront fee. The owner confirms availability before you travel.',
+      "Pay a small refundable commitment fee to lock in a time — refunded if it's not the one, kept only if you rent. The owner confirms availability before you travel.",
   },
   {
     icon: KeyRound,

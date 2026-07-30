@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import { ShieldCheck, BadgeCheck, MessageCircle, Wallet } from 'lucide-react'
+import { VIEWING_FEE_USD } from '@/config/constants'
 
 const FEATURES = [
   {
@@ -10,9 +11,8 @@ const FEATURES = [
   },
   {
     icon: Wallet,
-    title: 'No viewing fees',
-    description:
-      'Browse and book viewings for free. No more paying $20+ just to see a property that might already be gone.',
+    title: `A $${VIEWING_FEE_USD} refundable viewing fee`,
+    description: `Not $20+ per house just to look. Pay $${VIEWING_FEE_USD} to book a viewing — refunded if it's not the one, kept only if you go on to rent.`,
   },
   {
     icon: ShieldCheck,

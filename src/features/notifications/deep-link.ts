@@ -18,6 +18,10 @@ export function notificationLink(notification: AppNotification, role: UserRole |
     case 'booking_auto_cancelled':
     case 'booking_cancelled':
     case 'booking_reminder':
+    case 'viewing_payment_confirmed':
+    case 'viewing_payment_failed':
+    case 'viewing_outcome_rented':
+    case 'viewing_refund_processed':
       return bookingsPath
     case 'new_message':
       return notification.data.conversationId

@@ -11,6 +11,7 @@ import {
   FlagTriangleRight,
   CreditCard,
   BarChart3,
+  Banknote,
   type LucideIcon,
 } from 'lucide-react'
 import type { UserRole } from '@/types/user'
@@ -61,6 +62,7 @@ const ADMIN_NAV: DashboardNavItem[] = [
   { label: 'Listings', href: '/dashboard/admin/listings', icon: Home },
   { label: 'Fraud reports', href: '/dashboard/admin/fraud-flags', icon: FlagTriangleRight },
   { label: 'Subscriptions', href: '/dashboard/admin/subscriptions', icon: CreditCard },
+  { label: 'Refunds', href: '/dashboard/admin/refunds', icon: Banknote },
 ]
 
 export function getDashboardNavItems(role: UserRole): DashboardNavItem[] {

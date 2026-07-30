@@ -16,6 +16,14 @@ to `auto_cancelled_no_confirmation`, and applies a trust score penalty to
 the owner (or their agency) via the Firebase Admin SDK — which, unlike the
 client SDK, isn't bound by `firestore.rules`.
 
+`api/initiate-viewing-payment.ts` and `api/paynow-webhook.ts` handle the $5
+viewing commitment fee: the frontend calls the former (with a Firebase ID
+token) to start an EcoCash/Paynow payment, and Paynow calls the latter (its
+`resultUrl`) when the payment resolves — that's the only place a `bookings`
+doc actually gets created, since `firestore.rules` no longer lets a tenant
+create one directly. Unlike the two cron jobs, these are ordinary
+HTTP-triggered functions, not on a schedule.
+
 ## Deploying
 
 This is linked to its own Vercel project (`rentit-booking-sweep`), rooted
@@ -27,6 +35,13 @@ variables (set in the Vercel dashboard, never committed):
   service account, scoped to `roles/datastore.user` only.
 - `CRON_SECRET` — Vercel automatically sends this as a bearer token on
   cron-triggered requests; the function rejects anything else.
+- `PAYNOW_INTEGRATION_ID` / `PAYNOW_INTEGRATION_KEY` — the platform's single
+  Paynow merchant integration (all viewing fees settle into one account, not
+  each landlord's own).
+- `PAYNOW_RETURN_URL` — where Paynow redirects the tenant's browser after a
+  web-based (non-EcoCash) payment, e.g. `https://<app domain>/bookings`.
+- `APP_ORIGIN` — the frontend's origin, for the CORS headers on
+  `api/initiate-viewing-payment.ts`.
 
 ## Bootstrapping an admin
 

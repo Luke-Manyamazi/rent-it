@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
-import { CalendarClock, Check, Loader2, ShieldCheck, X } from 'lucide-react'
+import { CalendarClock, Check, Home, Loader2, ShieldCheck, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   Dialog,
@@ -23,8 +24,18 @@ import {
   cancelBookingByOwner,
   cancelBookingByTenant,
   completeBooking,
+  markBookingOutcome,
 } from '@/features/booking/api/bookings'
+import { useViewingPayment } from '@/features/booking/api/payments'
 import type { Booking } from '@/types/booking'
+
+const PAYMENT_STATUS_LABEL: Record<string, string> = {
+  pending: 'Payment pending',
+  paid: 'Fee paid',
+  failed: 'Payment failed',
+  forfeited: 'Fee kept (rented)',
+  refunded: 'Fee refunded',
+}
 
 function DeclineDialog({ onDecline }: { onDecline: (reason: string) => Promise<void> }) {
   const [open, setOpen] = useState(false)
@@ -74,6 +85,7 @@ function DeclineDialog({ onDecline }: { onDecline: (reason: string) => Promise<v
 export function BookingCard({ booking, viewAs }: { booking: Booking; viewAs: 'tenant' | 'owner' }) {
   const { firebaseUser } = useAuth()
   const { property } = useProperty(booking.propertyId)
+  const { payment } = useViewingPayment(booking.paymentId)
   const [busy, setBusy] = useState(false)
   // Lazy initializer is the one place it's safe to read the clock during
   // render; refreshed periodically via effect rather than read fresh on
@@ -123,7 +135,10 @@ export function BookingCard({ booking, viewAs }: { booking: Booking; viewAs: 'te
               })}
             </p>
           </div>
-          <BookingStatusBadge status={booking.status} />
+          <div className="flex flex-col items-end gap-1">
+            <BookingStatusBadge status={booking.status} />
+            {payment && <Badge variant="outline">{PAYMENT_STATUS_LABEL[payment.status]}</Badge>}
+          </div>
         </div>
 
         {booking.tenantNote && (
@@ -191,6 +206,42 @@ export function BookingCard({ booking, viewAs }: { booking: Booking; viewAs: 'te
               Mark as completed
             </Button>
           )}
+
+          {viewAs === 'owner' &&
+            booking.status === 'completed' &&
+            booking.rentalOutcome === 'pending' &&
+            property &&
+            firebaseUser && (
+              <>
+                <Button
+                  size="sm"
+                  disabled={busy}
+                  onClick={() =>
+                    withBusy(
+                      () => markBookingOutcome(booking, property, 'rented', firebaseUser.uid),
+                      'Marked as rented — listing taken off the market.'
+                    )
+                  }
+                >
+                  <Home className="size-3.5" />
+                  Rented
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={busy}
+                  onClick={() =>
+                    withBusy(
+                      () => markBookingOutcome(booking, property, 'not_rented', firebaseUser.uid),
+                      'Marked as not rented — viewing fee refunded.'
+                    )
+                  }
+                >
+                  <X className="size-3.5" />
+                  Not rented
+                </Button>
+              </>
+            )}
 
           {viewAs === 'tenant' &&
             ['pending', 'confirmed', 'availability_confirmed'].includes(booking.status) && (

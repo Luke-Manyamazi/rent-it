@@ -205,6 +205,15 @@ service cloud.firestore {
     // Auto-cancellation (status -> auto_cancelled_no_confirmation) is only
     // ever written by the scheduled Cloud Function via the Admin SDK, so no
     // client rule allows that transition.
+    //
+    // Phase 17: a booking only exists once its $5 viewing commitment fee is
+    // confirmed paid, so creation is exclusively via the scheduled-jobs
+    // payments backend's Admin SDK (which bypasses these rules regardless) —
+    // `allow create: if false` here just closes the door on a tenant
+    // creating an unpaid booking directly. The owner's `rentalOutcome`
+    // branch below is the one client-writable field pair this doc gained;
+    // see viewingPayments for the linked fee's paid -> forfeited/refunded
+    // transition.
     // ---------------------------------------------------------------------
     match /bookings/{bookingId} {
       allow read: if isSignedIn() && (
@@ -212,20 +221,47 @@ service cloud.firestore {
         ownsResource(resource.data.ownerId, resource.data.ownerType) ||
         isAdmin()
       );
-      allow create: if isSignedIn() && userRole() == 'tenant' &&
-        request.resource.data.tenantId == request.auth.uid &&
-        request.resource.data.status == 'pending' &&
-        request.resource.data.ownerId ==
-          get(/databases/$(database)/documents/properties/$(request.resource.data.propertyId)).data.ownerId &&
-        request.resource.data.ownerType ==
-          get(/databases/$(database)/documents/properties/$(request.resource.data.propertyId)).data.ownerType;
+      allow create: if false;
       allow update: if isSignedIn() && (
         (resource.data.tenantId == request.auth.uid &&
           request.resource.data.status in ['cancelled_by_tenant']) ||
         (ownsResource(resource.data.ownerId, resource.data.ownerType) &&
           request.resource.data.status in ['confirmed', 'availability_confirmed', 'cancelled_by_owner', 'completed']) ||
+        (ownsResource(resource.data.ownerId, resource.data.ownerType) &&
+          resource.data.status == 'completed' &&
+          resource.data.rentalOutcome == 'pending' &&
+          request.resource.data.rentalOutcome in ['rented', 'not_rented']) ||
         isAdmin()
       );
+      allow delete: if false;
+    }
+
+    // ---------------------------------------------------------------------
+    // viewingPayments — the $5 EcoCash/Paynow viewing commitment fee. Created
+    // only by the scheduled-jobs payments backend via the Admin SDK once a
+    // tenant starts paying (status 'pending'), then flipped to 'paid'/'failed'
+    // by the same backend when Paynow's webhook reports the result.
+    //
+    // 'paid' -> 'forfeited' (booking marked Rented, or tenant no-show) and
+    // 'paid' -> 'refunded' (booking marked Not Rented) are the only client
+    // writes allowed, and only by the property's owner — this is what makes
+    // the refund instant with no admin approval gate. The fee settles into a
+    // single platform Paynow merchant account, not the owner's, so this
+    // records that a refund is owed rather than that money has moved; an
+    // admin-facing bookkeeping list reads 'refunded' rows to action the
+    // actual payout outside this record.
+    // ---------------------------------------------------------------------
+    match /viewingPayments/{paymentId} {
+      allow read: if isSignedIn() && (
+        resource.data.tenantId == request.auth.uid ||
+        ownsResource(resource.data.ownerId, resource.data.ownerType) ||
+        isAdmin()
+      );
+      allow create: if false;
+      allow update: if isSignedIn() &&
+        ownsResource(resource.data.ownerId, resource.data.ownerType) &&
+        resource.data.status == 'paid' &&
+        request.resource.data.status in ['forfeited', 'refunded'];
       allow delete: if false;
     }
 

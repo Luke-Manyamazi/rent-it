@@ -12,6 +12,10 @@ const envSchema = z.object({
   VITE_SUPABASE_URL: z.url('Supabase project URL is required'),
   VITE_SUPABASE_ANON_KEY: z.string().min(1, 'Supabase anon key is required'),
   VITE_APP_URL: z.url().default('http://localhost:5173'),
+  /** The scheduled-jobs Vercel project — hosts the Paynow viewing-fee
+   *  endpoints (see scheduled-jobs/README.md). Different origin from
+   *  Firebase, so it's a separate base URL rather than a Firestore call. */
+  VITE_PAYMENTS_API_BASE_URL: z.url('Payments backend URL is required'),
 })
 
 const parsed = envSchema.safeParse(import.meta.env)

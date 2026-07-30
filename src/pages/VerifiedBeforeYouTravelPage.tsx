@@ -9,6 +9,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion'
 import { CONFIRMATION_WINDOW_HOURS } from '@/features/booking/api/bookings'
+import { VIEWING_FEE_USD } from '@/config/constants'
 
 // Suspension threshold lives in scheduled-jobs/api/sweep-bookings.ts
 // (SUSPENSION_STRIKE_THRESHOLD) — a separate deployable, so this number is a
@@ -19,7 +20,7 @@ const STEPS = [
   {
     icon: CalendarClock,
     title: 'You request a viewing',
-    description: 'No fee, no obligation — just pick a time that works for you.',
+    description: `A $${VIEWING_FEE_USD} refundable commitment fee books your slot — just pick a time that works for you.`,
   },
   {
     icon: CheckCircle2,
@@ -45,7 +46,7 @@ const FAQS = [
   },
   {
     question: 'Does this cost me anything?',
-    answer: 'No. Requesting a viewing and the Verified Before You Travel confirmation are both free for tenants.',
+    answer: `Booking a viewing costs a refundable $${VIEWING_FEE_USD} commitment fee, paid via EcoCash or Paynow — refunded if you view and it's not the one, kept only if you go on to rent. The Verified Before You Travel confirmation itself doesn't add any extra cost.`,
   },
   {
     question: 'Where do I see confirmation status?',

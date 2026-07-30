@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { ArrowRight, KeyRound, Building2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { VIEWING_FEE_USD } from '@/config/constants'
 
 export function AudienceSplit() {
   return (
@@ -19,8 +20,10 @@ export function AudienceSplit() {
           </span>
           <h3 className="mt-5 text-xl font-semibold">Looking for a home?</h3>
           <p className="text-muted-foreground mt-2 flex-1 text-sm">
-            Browse verified rentals in Masvingo, book free viewings, and
-            message landlords directly — no more $20 viewing fees.
+            Browse verified rentals in Masvingo and book a viewing for just $
+            {VIEWING_FEE_USD} — refunded if it's not a match. Message
+            landlords directly, without the $40 it used to cost to see five
+            houses.
           </p>
           <Button asChild className="mt-6 w-fit gap-1.5">
             <Link to="/listings">
@@ -44,7 +47,9 @@ export function AudienceSplit() {
           </h3>
           <p className="text-muted-foreground mt-2 flex-1 text-sm">
             Reach verified tenants directly, manage bookings and messages in
-            one place, and build a trust score that gets your listings seen.
+            one place, and build a trust score that gets your listings seen —
+            every viewing request comes with a paid commitment, so you spend
+            less time on tenants who were never going to show.
           </p>
           <Button asChild variant="outline" className="mt-6 w-fit gap-1.5">
             <Link to="/list-property">

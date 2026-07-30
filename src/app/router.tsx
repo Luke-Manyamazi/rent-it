@@ -22,6 +22,7 @@ import { AdminAgenciesPage } from '@/pages/AdminAgenciesPage'
 import { AdminFraudFlagsPage } from '@/pages/AdminFraudFlagsPage'
 import { AdminListingsPage } from '@/pages/AdminListingsPage'
 import { AdminSubscriptionsPage } from '@/pages/AdminSubscriptionsPage'
+import { AdminRefundsPage } from '@/pages/AdminRefundsPage'
 import { TrustScorePage } from '@/pages/TrustScorePage'
 import { AccountProfilePage } from '@/pages/AccountProfilePage'
 import { ListingsPage } from '@/pages/ListingsPage'
@@ -160,6 +161,7 @@ export const router = createBrowserRouter([
           { path: 'listings', element: <AdminListingsPage /> },
           { path: 'fraud-flags', element: <AdminFraudFlagsPage /> },
           { path: 'subscriptions', element: <AdminSubscriptionsPage /> },
+          { path: 'refunds', element: <AdminRefundsPage /> },
           { path: 'notifications', element: <NotificationsPage /> },
         ],
       },

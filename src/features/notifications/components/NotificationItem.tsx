@@ -6,6 +6,7 @@ import {
   TrendingUp,
   AlertTriangle,
   CreditCard,
+  Home,
   Bell,
   type LucideIcon,
 } from 'lucide-react'
@@ -22,6 +23,10 @@ const ICONS: Record<AppNotification['type'], LucideIcon> = {
   booking_auto_cancelled: CalendarClock,
   booking_cancelled: CalendarClock,
   booking_reminder: CalendarClock,
+  viewing_payment_confirmed: CreditCard,
+  viewing_payment_failed: AlertTriangle,
+  viewing_outcome_rented: Home,
+  viewing_refund_processed: CreditCard,
   new_message: MessageCircle,
   listing_verified: ShieldCheck,
   trust_score_changed: TrendingUp,

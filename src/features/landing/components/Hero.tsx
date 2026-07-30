@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { APP_NAME, APP_TAGLINE } from '@/config/constants'
+import { APP_NAME, APP_TAGLINE, VIEWING_FEE_USD } from '@/config/constants'
 
 const PROPERTY_TYPES = [
   { value: 'any', label: 'Any type' },
@@ -71,7 +71,8 @@ export function Hero() {
             className="text-muted-foreground mx-auto mt-4 max-w-xl text-lg"
           >
             {APP_NAME} connects verified tenants with verified landlords and
-            agencies — no fake listings, no viewing fees, no wasted trips.
+            agencies — no fake listings, a ${VIEWING_FEE_USD} refundable
+            viewing fee instead of $40 to gamble on five, no wasted trips.
           </motion.p>
         </div>
 

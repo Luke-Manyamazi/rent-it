@@ -8,10 +8,12 @@ import {
   Home,
   ShieldCheck,
   Users,
+  Banknote,
   ArrowRight,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { VIEWING_FEE_USD } from '@/config/constants'
 
 const TENANT_STEPS = [
   {
@@ -22,9 +24,8 @@ const TENANT_STEPS = [
   },
   {
     icon: CalendarCheck,
-    title: 'Book a free viewing',
-    description:
-      'Request a viewing time with no upfront fee. The owner must reconfirm availability before your visit — see Verified Before You Travel.',
+    title: `Book a viewing for $${VIEWING_FEE_USD}`,
+    description: `Pay a small commitment fee via EcoCash or Paynow to lock in a time — refunded if you view and it's not the one, kept only if you go on to rent. The owner must reconfirm availability before your visit — see Verified Before You Travel.`,
   },
   {
     icon: MessageCircle,
@@ -55,7 +56,15 @@ const OWNER_STEPS = [
     icon: CalendarCheck,
     title: 'Manage bookings & messages',
     description:
-      'Confirm viewing requests, reconfirm availability before each visit, and message tenants directly.',
+      "Confirm viewing requests, reconfirm availability before each visit, and message tenants directly. Every request already comes with a paid $" +
+      VIEWING_FEE_USD +
+      ' commitment, so you spend less time on tenants who were never going to show.',
+  },
+  {
+    icon: Banknote,
+    title: 'Mark Rented or Not Rented',
+    description:
+      "After a viewing, tell us whether it turned into a tenancy. Rented takes the listing off the market automatically; Not Rented refunds the tenant's fee instantly.",
   },
   {
     icon: Users,
@@ -103,8 +112,9 @@ export function HowItWorksPage() {
       >
         <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">How it works</h1>
         <p className="text-muted-foreground mt-4">
-          RentIT Masvingo connects tenants directly with landlords and agencies — no viewing
-          fees, verified listings, and a booking flow built to stop wasted trips.
+          RentIT Masvingo connects tenants directly with landlords and agencies — verified
+          listings, a ${VIEWING_FEE_USD} refundable viewing fee instead of $40 to see five houses,
+          and a booking flow built to stop wasted trips.
         </p>
       </motion.div>
 

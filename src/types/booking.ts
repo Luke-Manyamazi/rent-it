@@ -10,6 +10,10 @@ export type BookingStatus =
   | 'auto_cancelled_no_confirmation'
   | 'no_show'
 
+/** Whether a completed viewing turned into a signed tenancy. Set once by the
+ *  owner via `markBookingOutcome` — see bookings.ts. */
+export type BookingRentalOutcome = 'pending' | 'rented' | 'not_rented'
+
 /**
  * A viewing appointment request from a tenant for a property. Carries the
  * "Verified Before You Travel" state machine:
@@ -23,6 +27,12 @@ export type BookingStatus =
  * (Phase 11 Cloud Function) transitions the booking to
  * `auto_cancelled_no_confirmation` and applies a trust score penalty to the
  * owner via a TrustScoreEvent — see trust-score.ts.
+ *
+ * A `Booking` doc is only ever created by the `scheduled-jobs` payments
+ * backend (via Admin SDK), once the tenant's $5 viewing commitment fee is
+ * confirmed paid — see `ViewingPayment` in types/viewing-payment.ts and
+ * `firestore.rules` (`bookings.allow create: if false`). Tenants no longer
+ * create bookings directly.
  */
 export interface Booking {
   id: string
@@ -41,6 +51,13 @@ export interface Booking {
   cancelledBy: 'system' | 'tenant' | 'owner' | null
   cancellationReason: string | null
   tenantNote: string | null
+  /** The `ViewingPayment` that funded this booking's commitment fee. */
+  paymentId: string
+  /** Set by the owner once the viewing is `completed` — see
+   *  `markBookingOutcome` in `features/booking/api/bookings.ts`. */
+  rentalOutcome: BookingRentalOutcome
+  outcomeDecidedAt: Timestamp | null
+  outcomeDecidedBy: string | null
   createdAt: Timestamp
   updatedAt: Timestamp
 }

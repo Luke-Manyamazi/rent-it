@@ -1,70 +1,26 @@
 import { useEffect, useState } from 'react'
 import {
-  addDoc,
   collection,
   doc,
   onSnapshot,
   orderBy,
   query,
   serverTimestamp,
-  Timestamp,
   updateDoc,
   where,
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase/config'
-import type { Booking } from '@/types/booking'
+import type { Booking, BookingRentalOutcome } from '@/types/booking'
 import type { Property } from '@/types/property'
-import type { BookingRequestValues } from '@/features/booking/schemas'
 import { createNotification } from '@/features/notifications/api/notifications'
-import { getPropertyOnce } from '@/features/property/api/properties'
+import { getPropertyOnce, setPropertyStatus } from '@/features/property/api/properties'
 
-/** Hours before the viewing that the owner must reconfirm availability by. */
+/** Hours before the viewing that the owner must reconfirm availability by —
+ *  also the window scheduled-jobs/api/paynow-webhook.ts uses server-side
+ *  when it creates the booking (a booking now only exists once the $5
+ *  viewing fee is paid — see initiateViewingPayment in
+ *  features/booking/api/payments.ts). */
 export const CONFIRMATION_WINDOW_HOURS = 24
-/** Floor so a viewing requested for very soon still gives the owner a
- *  fair minimum window to respond, instead of an already-overdue booking. */
-const MIN_CONFIRMATION_WINDOW_HOURS = 1
-
-function computeConfirmationDeadline(proposedViewingTime: Date) {
-  const viewingMs = proposedViewingTime.getTime()
-  const standardDeadline = viewingMs - CONFIRMATION_WINDOW_HOURS * 60 * 60 * 1000
-  const floorDeadline = Date.now() + MIN_CONFIRMATION_WINDOW_HOURS * 60 * 60 * 1000
-  return new Date(Math.max(standardDeadline, floorDeadline))
-}
-
-export async function createBooking(
-  tenantId: string,
-  property: Property,
-  values: BookingRequestValues
-) {
-  const proposedViewingTime = new Date(values.proposedViewingTime)
-  const confirmationDeadline = computeConfirmationDeadline(proposedViewingTime)
-
-  await addDoc(collection(db, 'bookings'), {
-    propertyId: property.id,
-    tenantId,
-    ownerId: property.ownerId,
-    ownerType: property.ownerType,
-    status: 'pending',
-    proposedViewingTime: Timestamp.fromDate(proposedViewingTime),
-    confirmationDeadline: Timestamp.fromDate(confirmationDeadline),
-    availabilityConfirmedAt: null,
-    availabilityConfirmedBy: null,
-    cancelledAt: null,
-    cancelledBy: null,
-    cancellationReason: null,
-    tenantNote: values.tenantNote || null,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  })
-
-  await createNotification(
-    property.ownerId,
-    'booking_request',
-    'New viewing request',
-    `Someone wants to view "${property.title}".`,
-    { propertyId: property.id }
-  )
-}
 
 export async function confirmBooking(booking: Booking) {
   await updateDoc(doc(db, 'bookings', booking.id), {
@@ -103,6 +59,48 @@ export async function completeBooking(bookingId: string) {
     status: 'completed',
     updatedAt: serverTimestamp(),
   })
+}
+
+/**
+ * The owner records whether a completed viewing turned into a tenancy.
+ * 'rented' forfeits the $5 fee and takes the listing off the market;
+ * 'not_rented' marks the fee refunded — instantly, with no admin approval
+ * gate (see firestore.rules's viewingPayments rule and ARCHITECTURE.md for
+ * why "instant" here means the status, not that EcoCash/bank money has
+ * already moved).
+ */
+export async function markBookingOutcome(
+  booking: Booking,
+  property: Property,
+  outcome: Extract<BookingRentalOutcome, 'rented' | 'not_rented'>,
+  decidedByUid: string
+) {
+  await updateDoc(doc(db, 'bookings', booking.id), {
+    rentalOutcome: outcome,
+    outcomeDecidedAt: serverTimestamp(),
+    outcomeDecidedBy: decidedByUid,
+    updatedAt: serverTimestamp(),
+  })
+
+  if (outcome === 'rented') {
+    await setPropertyStatus(property, 'rented')
+  }
+
+  await updateDoc(doc(db, 'viewingPayments', booking.paymentId), {
+    status: outcome === 'rented' ? 'forfeited' : 'refunded',
+    refundedAt: outcome === 'not_rented' ? serverTimestamp() : null,
+    updatedAt: serverTimestamp(),
+  })
+
+  await createNotification(
+    booking.tenantId,
+    outcome === 'rented' ? 'viewing_outcome_rented' : 'viewing_refund_processed',
+    outcome === 'rented' ? 'Listing marked as rented' : 'Viewing fee refunded',
+    outcome === 'rented'
+      ? `The owner marked "${property.title}" as rented.`
+      : `Your $5 viewing fee for "${property.title}" was refunded.`,
+    { propertyId: booking.propertyId, bookingId: booking.id }
+  )
 }
 
 export async function cancelBookingByOwner(booking: Booking, reason: string) {

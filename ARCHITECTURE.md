@@ -9,8 +9,11 @@ build (RentIT Bulawayo/Harare/Zimbabwe, native apps, white-label, public API).
 - **Firebase**: Auth, Firestore (database of record), Cloud Messaging.
 - **Supabase**: Storage only (property photos, avatars, agency logos,
   verification documents, chat attachments).
-- **Vercel**: one scheduled job (`scheduled-jobs/`) — the Verified Before
-  You Travel auto-cancellation sweep. See that section below.
+- **Vercel**: the `scheduled-jobs/` project — two scheduled jobs (the
+  Verified Before You Travel auto-cancellation sweep and the daily analytics
+  rollup) plus two ordinary HTTP endpoints for the Paynow/EcoCash viewing
+  commitment fee (`api/initiate-viewing-payment.ts`,
+  `api/paynow-webhook.ts`). See those sections below.
 
 Both the Supabase and Vercel pieces exist for the same reason: Firebase
 Storage and Firebase Cloud Functions each require the Blaze (pay-as-you-go)
@@ -78,7 +81,8 @@ Firestore console after the project exists.
 | `agencies/{agencyId}/members/{uid}` | Agency staff roster. |
 | `agencies/{agencyId}/trustScoreEvents/{id}` | Trust score log for agencies. |
 | `properties/{propertyId}` | Listings. Only `active`/`rented` are publicly readable. |
-| `bookings/{bookingId}` | Viewing appointments — the Verified Before You Travel state machine (below). |
+| `bookings/{bookingId}` | Viewing appointments — the Verified Before You Travel state machine (below). Only ever created server-side, once the linked `viewingPayments` doc is paid. |
+| `viewingPayments/{id}` | The $5 EcoCash/Paynow viewing commitment fee — see below. |
 | `conversations/{id}` / `.../messages/{id}` | In-app messaging, tied to a property/booking. |
 | `notifications/{id}` | Per-user notification feed. |
 | `reviews/{id}` | Tenant reviews of a completed booking. |
@@ -182,6 +186,47 @@ pending → confirmed → availability_confirmed → completed
   strikes suspends all of that owner's currently-active listings (also
   handled inside the sweep job, since it already has Admin SDK access).
 
+## Viewing commitment fee (Paynow / EcoCash)
+
+The product problem: viewing a property the old way costs ~$40 (a $20
+viewing fee plus a $20 agent fee), which gets prohibitively expensive if a
+tenant wants to see several houses before choosing. RentIT replaces that with
+a single $5 commitment fee per viewing, refunded if it doesn't lead to a
+tenancy and kept only if it does — payable via EcoCash (mobile money) or
+Paynow's web checkout, both through one Paynow merchant integration.
+
+```
+viewingPayments: pending → paid ──┬─→ forfeited  (booking marked "Rented")
+                        ↘ failed  └─→ refunded    (booking marked "Not Rented")
+```
+
+- A `Booking` doc is **only** ever created server-side
+  (`scheduled-jobs/api/paynow-webhook.ts`), once Paynow confirms the fee is
+  paid — `firestore.rules` sets `bookings.allow create: if false`, closing
+  off the old tenant-creates-a-free-booking path entirely. The
+  `viewingPayments` doc created up front by
+  `scheduled-jobs/api/initiate-viewing-payment.ts` carries the booking-request
+  fields (`propertyId`, `proposedViewingTime`, `tenantNote`) until then.
+- After a viewing completes, the owner presses **Rented** or **Not Rented**
+  (`markBookingOutcome` in `src/features/booking/api/bookings.ts`). Rented
+  forfeits the fee and finally exercises `Property.status: 'rented'` (a value
+  that existed in the schema before this feature but nothing set); Not
+  Rented flips the fee to `refunded` — instantly, with no admin approval
+  gate, via a narrow client-writable `firestore.rules` branch scoped to
+  `paid → forfeited | refunded` and only the property's owner.
+- **"Instant refund" is a status, not a guarantee of moved money.** All fees
+  settle into one platform Paynow merchant account (one Integration
+  ID/Key), not each landlord's own — Paynow itself has no documented
+  automated refund/payout API, so `refunded` records that a payout is owed.
+  `/dashboard/admin/refunds` (`AdminRefundsPage`) is a read-only bookkeeping
+  list of what still needs to be sent back, not a review/approval queue.
+- Same reasoning as the booking sweep applies to why this is in
+  `scheduled-jobs/` and not a Firebase Cloud Function: no Blaze plan. Unlike
+  the sweep, these two endpoints are ordinary HTTP functions (one called by
+  the frontend with a Firebase ID token, one called by Paynow as its
+  `resultUrl` webhook), not on a Vercel Cron schedule — so they don't count
+  against the Hobby plan's 2-cron-job cap.
+
 ## Future expansion (documented now, not built)
 
 The schema is deliberately shaped so these don't require breaking changes:
@@ -203,9 +248,12 @@ The schema is deliberately shaped so these don't require breaking changes:
 - **AI assistant**: property/booking data is already structured (not
   freeform text), which is what makes it usable as tool-call context for an
   assistant later, without a data migration first.
-- **Paynow / EcoCash / InnBucks / Mukuru**: `Subscription.paymentProvider` and
-  `externalCustomerId` are typed and nullable now specifically so adding a
-  provider in Phase 14 is filling in a field, not adding one.
+- **Paynow / EcoCash / InnBucks / Mukuru for subscriptions**: agency billing
+  is still proof-of-payment + admin approval (see `subscriptions` above) —
+  only the viewing commitment fee has a real Paynow integration so far.
+  `Subscription.paymentProvider` and `externalCustomerId` are typed and
+  nullable now specifically so wiring subscriptions to the same Paynow
+  integration used for viewing fees is filling in a field, not adding one.
 - **BI dashboard**: cached rollup fields (`Property.viewCount`,
   `Agency.activeListingCount`) exist so a future analytics view doesn't need
   to scan whole collections to compute basic metrics.
