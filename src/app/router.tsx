@@ -29,6 +29,7 @@ import { TenantBookingsPage } from '@/pages/TenantBookingsPage'
 import { OwnerBookingsPage } from '@/pages/OwnerBookingsPage'
 import { ConversationListPage } from '@/pages/ConversationListPage'
 import { ConversationThreadPage } from '@/pages/ConversationThreadPage'
+import { NotificationsPage } from '@/pages/NotificationsPage'
 import { PlaceholderPage } from '@/components/common/PlaceholderPage'
 import {
   RequireAuth,
@@ -100,6 +101,7 @@ export const router = createBrowserRouter([
           { path: 'bookings', element: <TenantBookingsPage /> },
           { path: 'messages', element: <ConversationListPage /> },
           { path: 'messages/:id', element: <ConversationThreadPage /> },
+          { path: 'notifications', element: <NotificationsPage /> },
           { path: 'profile', element: <AccountProfilePage /> },
         ],
       },
@@ -118,6 +120,7 @@ export const router = createBrowserRouter([
           { path: 'bookings', element: <OwnerBookingsPage /> },
           { path: 'messages', element: <ConversationListPage /> },
           { path: 'messages/:id', element: <ConversationThreadPage /> },
+          { path: 'notifications', element: <NotificationsPage /> },
           { path: 'trust-score', element: <TrustScorePage /> },
           { path: 'profile', element: <AccountProfilePage /> },
         ],
@@ -137,6 +140,7 @@ export const router = createBrowserRouter([
           { path: 'bookings', element: <OwnerBookingsPage /> },
           { path: 'messages', element: <ConversationListPage /> },
           { path: 'messages/:id', element: <ConversationThreadPage /> },
+          { path: 'notifications', element: <NotificationsPage /> },
           { path: 'team', element: <AgencyTeamPage /> },
           { path: 'trust-score', element: <TrustScorePage /> },
           { path: 'agency-profile', element: <AgencyProfilePage /> },
@@ -156,6 +160,7 @@ export const router = createBrowserRouter([
           { path: 'agencies', element: <AdminAgenciesPage /> },
           { path: 'listings', element: <AdminListingsPage /> },
           { path: 'fraud-flags', element: <AdminFraudFlagsPage /> },
+          { path: 'notifications', element: <NotificationsPage /> },
         ],
       },
     ],

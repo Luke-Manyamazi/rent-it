@@ -15,6 +15,8 @@ import { db } from '@/lib/firebase/config'
 import type { Booking } from '@/types/booking'
 import type { Property } from '@/types/property'
 import type { BookingRequestValues } from '@/features/booking/schemas'
+import { createNotification } from '@/features/notifications/api/notifications'
+import { getPropertyOnce } from '@/features/property/api/properties'
 
 /** Hours before the viewing that the owner must reconfirm availability by. */
 export const CONFIRMATION_WINDOW_HOURS = 24
@@ -54,22 +56,46 @@ export async function createBooking(
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   })
+
+  await createNotification(
+    property.ownerId,
+    'booking_request',
+    'New viewing request',
+    `Someone wants to view "${property.title}".`,
+    { propertyId: property.id }
+  )
 }
 
-export async function confirmBooking(bookingId: string) {
-  await updateDoc(doc(db, 'bookings', bookingId), {
+export async function confirmBooking(booking: Booking) {
+  await updateDoc(doc(db, 'bookings', booking.id), {
     status: 'confirmed',
     updatedAt: serverTimestamp(),
   })
+  const property = await getPropertyOnce(booking.propertyId)
+  await createNotification(
+    booking.tenantId,
+    'booking_confirmed',
+    'Viewing confirmed',
+    `Your viewing for "${property?.title ?? 'a listing'}" was confirmed.`,
+    { propertyId: booking.propertyId, bookingId: booking.id }
+  )
 }
 
-export async function confirmAvailability(bookingId: string, confirmedByUid: string) {
-  await updateDoc(doc(db, 'bookings', bookingId), {
+export async function confirmAvailability(booking: Booking, confirmedByUid: string) {
+  await updateDoc(doc(db, 'bookings', booking.id), {
     status: 'availability_confirmed',
     availabilityConfirmedAt: serverTimestamp(),
     availabilityConfirmedBy: confirmedByUid,
     updatedAt: serverTimestamp(),
   })
+  const property = await getPropertyOnce(booking.propertyId)
+  await createNotification(
+    booking.tenantId,
+    'booking_availability_confirmed',
+    'Verified Before You Travel ✓',
+    `The owner reconfirmed "${property?.title ?? 'the listing'}" is still available — go with confidence.`,
+    { propertyId: booking.propertyId, bookingId: booking.id }
+  )
 }
 
 export async function completeBooking(bookingId: string) {
@@ -79,23 +105,39 @@ export async function completeBooking(bookingId: string) {
   })
 }
 
-export async function cancelBookingByOwner(bookingId: string, reason: string) {
-  await updateDoc(doc(db, 'bookings', bookingId), {
+export async function cancelBookingByOwner(booking: Booking, reason: string) {
+  await updateDoc(doc(db, 'bookings', booking.id), {
     status: 'cancelled_by_owner',
     cancelledAt: serverTimestamp(),
     cancelledBy: 'owner',
     cancellationReason: reason,
     updatedAt: serverTimestamp(),
   })
+  const property = await getPropertyOnce(booking.propertyId)
+  await createNotification(
+    booking.tenantId,
+    'booking_cancelled',
+    'Viewing request declined',
+    `Your request for "${property?.title ?? 'a listing'}" was declined: ${reason}`,
+    { propertyId: booking.propertyId, bookingId: booking.id }
+  )
 }
 
-export async function cancelBookingByTenant(bookingId: string) {
-  await updateDoc(doc(db, 'bookings', bookingId), {
+export async function cancelBookingByTenant(booking: Booking) {
+  await updateDoc(doc(db, 'bookings', booking.id), {
     status: 'cancelled_by_tenant',
     cancelledAt: serverTimestamp(),
     cancelledBy: 'tenant',
     updatedAt: serverTimestamp(),
   })
+  const property = await getPropertyOnce(booking.propertyId)
+  await createNotification(
+    booking.ownerId,
+    'booking_cancelled',
+    'Viewing cancelled',
+    `The tenant cancelled their viewing request for "${property?.title ?? 'a listing'}".`,
+    { propertyId: booking.propertyId, bookingId: booking.id }
+  )
 }
 
 interface BookingsSnapshot {

@@ -22,7 +22,7 @@ export function PropertiesTable({ properties }: { properties: Property[] }) {
 
   async function onToggleVerified(property: Property, checked: boolean) {
     try {
-      await setPropertyVerified(property.id, checked)
+      await setPropertyVerified(property, checked)
       toast.success(checked ? 'Listing verified.' : 'Verification removed.')
     } catch {
       toast.error("Couldn't update verification.")
@@ -32,7 +32,7 @@ export function PropertiesTable({ properties }: { properties: Property[] }) {
   async function onToggleSuspended(property: Property) {
     const suspending = property.status !== 'suspended'
     try {
-      await setPropertySuspended(property.id, suspending, property.status)
+      await setPropertySuspended(property, suspending, property.status)
       toast.success(suspending ? 'Listing suspended.' : 'Listing unsuspended.')
     } catch {
       toast.error("Couldn't update that listing.")

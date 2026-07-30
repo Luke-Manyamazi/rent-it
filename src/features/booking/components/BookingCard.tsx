@@ -152,14 +152,14 @@ export function BookingCard({ booking, viewAs }: { booking: Booking; viewAs: 'te
               <Button
                 size="sm"
                 disabled={busy}
-                onClick={() => withBusy(() => confirmBooking(booking.id), 'Viewing confirmed.')}
+                onClick={() => withBusy(() => confirmBooking(booking), 'Viewing confirmed.')}
               >
                 <Check className="size-3.5" />
                 Confirm
               </Button>
               <DeclineDialog
                 onDecline={(reason) =>
-                  withBusy(() => cancelBookingByOwner(booking.id, reason), 'Request declined.')
+                  withBusy(() => cancelBookingByOwner(booking, reason), 'Request declined.')
                 }
               />
             </>
@@ -171,7 +171,7 @@ export function BookingCard({ booking, viewAs }: { booking: Booking; viewAs: 'te
               disabled={busy}
               onClick={() =>
                 withBusy(
-                  () => confirmAvailability(booking.id, firebaseUser.uid),
+                  () => confirmAvailability(booking, firebaseUser.uid),
                   'Availability confirmed — tenant notified.'
                 )
               }
@@ -199,7 +199,7 @@ export function BookingCard({ booking, viewAs }: { booking: Booking; viewAs: 'te
                 variant="outline"
                 disabled={busy}
                 onClick={() =>
-                  withBusy(() => cancelBookingByTenant(booking.id), 'Booking cancelled.')
+                  withBusy(() => cancelBookingByTenant(booking), 'Booking cancelled.')
                 }
               >
                 Cancel

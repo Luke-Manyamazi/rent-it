@@ -12,6 +12,7 @@ import {
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase/config'
 import type { Conversation, Message } from '@/types/message'
+import { createNotification } from '@/features/notifications/api/notifications'
 
 export async function sendMessage(
   conversationId: string,
@@ -35,6 +36,14 @@ export async function sendMessage(
     [`unreadCounts.${otherParticipantId}`]: increment(1),
     updatedAt: serverTimestamp(),
   })
+
+  await createNotification(
+    otherParticipantId,
+    'new_message',
+    'New message',
+    text.length > 80 ? `${text.slice(0, 80)}…` : text,
+    { conversationId }
+  )
 }
 
 export function otherParticipant(conversation: Conversation, uid: string) {

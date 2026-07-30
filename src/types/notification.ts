@@ -5,6 +5,7 @@ export type NotificationType =
   | 'booking_confirmed'
   | 'booking_availability_confirmed'
   | 'booking_auto_cancelled'
+  | 'booking_cancelled'
   | 'booking_reminder'
   | 'new_message'
   | 'listing_verified'

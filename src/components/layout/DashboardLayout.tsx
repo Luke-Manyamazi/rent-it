@@ -9,6 +9,7 @@ import { signOutUser } from '@/features/auth/api/auth'
 import { getAuthErrorMessage } from '@/features/auth/api/error-messages'
 import { getDashboardNavItems } from '@/config/dashboard-nav'
 import { DashboardSidebar, DashboardMobileTabs } from '@/components/layout/DashboardSidebar'
+import { NotificationBell } from '@/features/notifications/components/NotificationBell'
 
 export function DashboardLayout() {
   const navigate = useNavigate()
@@ -42,9 +43,10 @@ export function DashboardLayout() {
             <span className="hidden sm:inline">{APP_NAME}</span>
           </Link>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1">
+            <NotificationBell />
             {profile && (
-              <div className="flex items-center gap-2">
+              <div className="ml-2 flex items-center gap-2">
                 <Avatar className="size-7">
                   <AvatarImage src={profile.photoUrl ?? undefined} alt={profile.fullName} />
                   <AvatarFallback className="text-xs">{initials}</AvatarFallback>
