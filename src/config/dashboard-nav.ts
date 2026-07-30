@@ -32,6 +32,7 @@ const LANDLORD_NAV: DashboardNavItem[] = [
   { label: 'Overview', href: '/dashboard/landlord', icon: LayoutDashboard, end: true },
   { label: 'My properties', href: '/dashboard/landlord/properties', icon: Home },
   { label: 'Bookings', href: '/dashboard/landlord/bookings', icon: CalendarClock },
+  { label: 'Messages', href: '/dashboard/landlord/messages', icon: MessageCircle },
   { label: 'Trust score', href: '/dashboard/landlord/trust-score', icon: ShieldCheck },
   { label: 'Profile', href: '/dashboard/landlord/profile', icon: UserCircle },
 ]
@@ -40,6 +41,7 @@ const AGENCY_NAV: DashboardNavItem[] = [
   { label: 'Overview', href: '/dashboard/agency', icon: LayoutDashboard, end: true },
   { label: 'Properties', href: '/dashboard/agency/properties', icon: Home },
   { label: 'Bookings', href: '/dashboard/agency/bookings', icon: CalendarClock },
+  { label: 'Messages', href: '/dashboard/agency/messages', icon: MessageCircle },
   { label: 'Team', href: '/dashboard/agency/team', icon: Users },
   { label: 'Trust score', href: '/dashboard/agency/trust-score', icon: ShieldCheck },
   { label: 'Agency profile', href: '/dashboard/agency/agency-profile', icon: Building2 },

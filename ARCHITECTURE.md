@@ -94,6 +94,31 @@ pushes tenant-landlord contact through in-app messaging instead of raw phone
 numbers, which is also a product goal (keeps the relationship, and the trust
 mechanisms around it, on-platform instead of moving to WhatsApp).
 
+## Messaging
+
+`Conversation.participantIds` is always exactly 2 uids by design (enforced
+in `firestore.rules`: `participantIds.size() == 2`). Two consequences worth
+knowing:
+
+- **One conversation per (tenant, property) pair**, not per (tenant, owner).
+  Asking about two different listings from the same landlord opens two
+  separate threads — they're different rental decisions, and keeping them
+  separate matches how a tenant actually thinks about "the conversation
+  about the Rhodene house" vs. "the one about the Mucheke flat."
+- **Agency conversations only reach the agency owner**, not any team member
+  who happens to be logged in. Since `agencyId` equals the owner's own uid
+  for founding agencies (see Agencies below), messaging "the agency" already
+  resolves correctly to a real, valid uid — but a 2-participant model can't
+  represent "any of N current agents can answer this." Giving every agent
+  visibility into agency-wide conversations would need either a 3rd
+  participant type (agency-as-participant, not user-as-participant) or a
+  fan-out/mirroring scheme, both bigger schema changes than this phase
+  warranted.
+- **Unread counts (`Conversation.unreadCounts`) aren't rule-validated** —
+  either participant can freely rewrite the whole map, same MVP tradeoff as
+  the client-authored notifications below. Low stakes since only the two
+  people in the conversation are ever affected.
+
 ## Authentication
 
 - **Email/Password and Google** are the two primary sign-in methods, both of

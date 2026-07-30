@@ -1,17 +1,14 @@
 import { useParams } from 'react-router-dom'
-import { toast } from 'sonner'
 import {
   BedDouble,
   Bath,
   Ruler,
   MapPin,
   ShieldCheck,
-  MessageCircle,
   Loader2,
   ImageOff,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useProperty } from '@/features/property/api/properties'
@@ -19,6 +16,7 @@ import { useAgency } from '@/features/agency/hooks/useAgency'
 import { useUserPublicProfile } from '@/features/account/hooks/useUserPublicProfile'
 import { SaveButton } from '@/features/property/components/SaveButton'
 import { BookingRequestDialog } from '@/features/booking/components/BookingRequestDialog'
+import { MessageOwnerButton } from '@/features/messaging/components/MessageOwnerButton'
 import { amenityOptions } from '@/features/property/schemas'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 
@@ -70,10 +68,6 @@ export function PropertyDetailPage() {
   }
 
   if (!property) return <NotFoundPage />
-
-  function onComingSoon(feature: string) {
-    toast(`${feature} is coming in a later phase.`)
-  }
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
@@ -183,14 +177,7 @@ export function PropertyDetailPage() {
               )}
               <div className="mt-4 space-y-2">
                 <BookingRequestDialog property={property} />
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => onComingSoon('Messaging')}
-                >
-                  <MessageCircle className="size-4" />
-                  Message {property.ownerType === 'agency' ? 'agency' : 'owner'}
-                </Button>
+                <MessageOwnerButton property={property} />
               </div>
             </CardContent>
           </Card>

@@ -27,6 +27,8 @@ import { PropertyCreatePage } from '@/pages/PropertyCreatePage'
 import { PropertyEditPage } from '@/pages/PropertyEditPage'
 import { TenantBookingsPage } from '@/pages/TenantBookingsPage'
 import { OwnerBookingsPage } from '@/pages/OwnerBookingsPage'
+import { ConversationListPage } from '@/pages/ConversationListPage'
+import { ConversationThreadPage } from '@/pages/ConversationThreadPage'
 import { PlaceholderPage } from '@/components/common/PlaceholderPage'
 import {
   RequireAuth,
@@ -96,15 +98,8 @@ export const router = createBrowserRouter([
           { index: true, element: <TenantOverviewPage /> },
           { path: 'saved', element: <TenantSavedListingsPage /> },
           { path: 'bookings', element: <TenantBookingsPage /> },
-          {
-            path: 'messages',
-            element: (
-              <PlaceholderPage
-                title="Messages"
-                description="In-app messaging with landlords and agencies is coming soon."
-              />
-            ),
-          },
+          { path: 'messages', element: <ConversationListPage /> },
+          { path: 'messages/:id', element: <ConversationThreadPage /> },
           { path: 'profile', element: <AccountProfilePage /> },
         ],
       },
@@ -121,6 +116,8 @@ export const router = createBrowserRouter([
           { path: 'properties/new', element: <PropertyCreatePage /> },
           { path: 'properties/:id/edit', element: <PropertyEditPage /> },
           { path: 'bookings', element: <OwnerBookingsPage /> },
+          { path: 'messages', element: <ConversationListPage /> },
+          { path: 'messages/:id', element: <ConversationThreadPage /> },
           { path: 'trust-score', element: <TrustScorePage /> },
           { path: 'profile', element: <AccountProfilePage /> },
         ],
@@ -138,6 +135,8 @@ export const router = createBrowserRouter([
           { path: 'properties/new', element: <PropertyCreatePage /> },
           { path: 'properties/:id/edit', element: <PropertyEditPage /> },
           { path: 'bookings', element: <OwnerBookingsPage /> },
+          { path: 'messages', element: <ConversationListPage /> },
+          { path: 'messages/:id', element: <ConversationThreadPage /> },
           { path: 'team', element: <AgencyTeamPage /> },
           { path: 'trust-score', element: <TrustScorePage /> },
           { path: 'agency-profile', element: <AgencyProfilePage /> },
