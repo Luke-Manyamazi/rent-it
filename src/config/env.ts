@@ -14,8 +14,11 @@ const envSchema = z.object({
   VITE_APP_URL: z.url().default('http://localhost:5173'),
   /** The scheduled-jobs Vercel project — hosts the Paynow viewing-fee
    *  endpoints (see scheduled-jobs/README.md). Different origin from
-   *  Firebase, so it's a separate base URL rather than a Firestore call. */
-  VITE_PAYMENTS_API_BASE_URL: z.url('Payments backend URL is required'),
+   *  Firebase, so it's a separate base URL rather than a Firestore call.
+   *  Optional here (unlike Firebase/Supabase) so a missing/unconfigured
+   *  payments backend only breaks booking a viewing, not the whole app —
+   *  see the check in features/booking/api/payments.ts. */
+  VITE_PAYMENTS_API_BASE_URL: z.url().optional(),
 })
 
 const parsed = envSchema.safeParse(import.meta.env)

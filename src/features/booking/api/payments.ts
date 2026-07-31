@@ -29,6 +29,9 @@ export async function initiateViewingPayment(
   firebaseUser: User,
   input: InitiateViewingPaymentInput
 ): Promise<InitiateViewingPaymentResult> {
+  if (!env.VITE_PAYMENTS_API_BASE_URL) {
+    throw new Error('Viewing payments are not configured on this deployment yet.')
+  }
   const idToken = await firebaseUser.getIdToken()
   const response = await fetch(`${env.VITE_PAYMENTS_API_BASE_URL}/api/initiate-viewing-payment`, {
     method: 'POST',
